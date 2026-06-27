@@ -259,6 +259,36 @@ main {
 @keyframes hint-pulse { 0%,100%{outline-color:#7ec8a0} 50%{outline-color:transparent} }
 
 
+
+/* Premove */
+.sq.premove-from { background: rgba(100, 180, 255, 0.45) !important; }
+.sq.premove-to   { background: rgba(100, 180, 255, 0.35) !important; }
+
+/* Right-click highlights */
+.sq.rc-highlight { background: rgba(220, 60, 60, 0.55) !important; }
+
+/* Arrow SVG overlay */
+#arrow-layer {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Premove indicator in status */
+.premove-badge {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: #64b4ff;
+  border: 1px solid #64b4ff;
+  border-radius: 20px;
+  padding: 2px 8px;
+  margin-left: 8px;
+  letter-spacing: 0.06em;
+}
+
 @media (max-width: 900px) {
   main { flex-direction: column; align-items: center; padding: 12px; }
   #board { grid-template-columns: repeat(8, 48px); grid-template-rows: repeat(8, 48px); }
@@ -282,7 +312,7 @@ main {
       <span class="player-name" id="top-name"><span class="turn-dot"></span>BLUERICA</span>
       <span class="captured" id="top-cap"></span>
     </div>
-    <div id="board-wrap"><div id="board"></div></div>
+    <div id="board-wrap"><div id="board"></div><svg id="arrow-layer" viewBox="0 0 736 736" xmlns="http://www.w3.org/2000/svg"><defs><marker id="arr-head" markerWidth="4" markerHeight="4" refX="2" refY="2" orient="auto"><path d="M0,0 L0,4 L4,2 z" fill="rgba(220,60,60,0.85)"/></marker><marker id="arr-head-green" markerWidth="4" markerHeight="4" refX="2" refY="2" orient="auto"><path d="M0,0 L0,4 L4,2 z" fill="rgba(100,200,100,0.9)"/></marker></defs></svg></div>
     <div class="player-row" id="bot-row">
       <span class="player-name active" id="bot-name"><span class="turn-dot"></span>You</span>
       <span class="captured" id="bot-cap"></span>
@@ -321,7 +351,7 @@ main {
       <div class="panel-head">Difficulty</div>
       <div class="panel-body">
         <div class="diff-grid">
-          <button class="diff-btn" data-skill="0"  data-depth="1" data-delay="1200">1<span class="diff-sub">Newbie</span></button>
+          <button class="diff-btn active" data-skill="0"  data-depth="1" data-delay="1200">1<span class="diff-sub">Newbie</span></button>
           <button class="diff-btn" data-skill="1"  data-depth="1" data-delay="1000">2<span class="diff-sub">Beginner</span></button>
           <button class="diff-btn" data-skill="3"  data-depth="2" data-delay="900">3<span class="diff-sub">Easy</span></button>
           <button class="diff-btn" data-skill="5"  data-depth="3" data-delay="700">4<span class="diff-sub">Casual</span></button>
@@ -329,7 +359,7 @@ main {
           <button class="diff-btn" data-skill="11" data-depth="7" data-delay="500">6<span class="diff-sub">Club</span></button>
           <button class="diff-btn" data-skill="14" data-depth="10" data-delay="400">7<span class="diff-sub">Hard</span></button>
           <button class="diff-btn" data-skill="17" data-depth="13" data-delay="350">8<span class="diff-sub">Expert</span></button>
-          <button class="diff-btn active" data-skill="20" data-depth="18" data-delay="300">∞<span class="diff-sub">Max</span></button>
+          <button class="diff-btn" data-skill="20" data-depth="18" data-delay="300">∞<span class="diff-sub">Max</span></button>
         </div>
       </div>
     </div>
@@ -414,8 +444,8 @@ let lastTo       = null;
 let engineReady  = false;
 let engineBusy   = false;
 let pendingPromo = null;
-let skillLevel   = 20;
-let searchDepth  = 18;
+let skillLevel   = 0;
+let searchDepth  = 1;
 let stockfish    = null;
 let resolveMove  = null;
 
@@ -551,6 +581,9 @@ function renderBoard() {
       const sq = document.createElement('div');
       sq.className = 'sq ' + (isLight ? 'light' : 'dark');
       sq.dataset.sq = sqName;
+      if (rcHighlights.has(sqName)) sq.classList.add('rc-highlight');
+      if (premoveFrom === sqName) sq.classList.add('premove-from');
+      if (premoveTo   === sqName) sq.classList.add('premove-to');
 
       // Highlights
       if (selectedSq === sqName) sq.classList.add('selected');
@@ -618,9 +651,36 @@ function renderBoard() {
 }
 
 function onSquareClick(sqName) {
+  // Clear arrows/highlights on any left click
+  if (rcHighlights.size > 0 || arrows.length > 0) {
+    rcHighlights.clear();
+    arrows = [];
+    renderArrows();
+    renderBoard();
+  }
+
   if (chess.game_over()) return;
-  if (chess.turn() !== playerColor) return;
-  if (engineBusy) return;
+
+  // PREMOVE: if engine is thinking, allow setting premove
+  if (engineBusy || chess.turn() !== playerColor) {
+    if (selectedSq) {
+      const piece = chess.get(selectedSq);
+      if (piece && piece.color === playerColor) {
+        // Set premove
+        setPremove(selectedSq, sqName);
+        selectedSq = null; legalMoves = [];
+        return;
+      }
+    }
+    // Select piece for premove
+    const p = chess.get(sqName);
+    if (p && p.color === playerColor) {
+      selectedSq = sqName;
+      legalMoves = chess.moves({ square: sqName, verbose: true });
+      renderBoard();
+    }
+    return;
+  }
 
   if (selectedSq) {
     const target = legalMoves.find(m => m.to === sqName);
@@ -668,6 +728,8 @@ function doMove(from, to, promo) {
   playSoundForMove(move);
   if (chess.in_check()) playCheck();
   if (chess.game_over()) { playGameOver(); setTimeout(showGameOver, 600); return; }
+  // Execute premove if player had one queued
+  setTimeout(executePremoveIfSet, 50);
   if (chess.turn() !== playerColor) engineTurn();
 }
 
@@ -812,6 +874,8 @@ function newGame() {
   engineBusy = false; pendingPromo = null;
   $('overlay').classList.remove('show');
   updateEval(0);
+  clearArrows();
+  rcHighlights.clear();
   renderBoard();
   updateStatus();
   if (playerColor === 'b') engineTurn();
@@ -893,7 +957,22 @@ function setupDrag(sqEl, sqName) {
 }
 
 // ── Controls ──────────────────────────────────────────────────────────────────
-let engineDelay = 300;
+let engineDelay = 1200;
+
+// Restore saved difficulty
+(function restoreDifficulty() {
+  const saved = localStorage.getItem('bluerica-level');
+  if (saved) {
+    const btn = document.querySelector(`.diff-btn[data-skill="${saved}"]`);
+    if (btn) {
+      document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      skillLevel  = parseInt(btn.dataset.skill);
+      searchDepth = parseInt(btn.dataset.depth);
+      engineDelay = parseInt(btn.dataset.delay) || 300;
+    }
+  }
+})();
 
 document.querySelectorAll('.diff-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -902,6 +981,7 @@ document.querySelectorAll('.diff-btn').forEach(btn => {
     skillLevel   = parseInt(btn.dataset.skill);
     searchDepth  = parseInt(btn.dataset.depth);
     engineDelay  = parseInt(btn.dataset.delay) || 300;
+    localStorage.setItem('bluerica-level', btn.dataset.skill);
   });
 });
 
@@ -921,6 +1001,178 @@ $('hint-btn').addEventListener('click', showHint);
 $('resign-btn').addEventListener('click', resign);
 $('modal-new-btn').addEventListener('click', newGame);
 
+
+
+// ── Premove ───────────────────────────────────────────────────────────────────
+let premoveFrom = null;
+let premoveTo   = null;
+let premovePromo = null;
+
+function setPremove(from, to) {
+  premoveFrom = from;
+  premoveTo   = to;
+  premovePromo = null;
+  renderBoard();
+  // Show premove badge in status
+  const badge = $('status-badge');
+  badge.innerHTML = 'thinking… <span class="premove-badge">premove set</span>';
+}
+
+function clearPremove() {
+  premoveFrom = null;
+  premoveTo   = null;
+  premovePromo = null;
+}
+
+function executePremoveIfSet() {
+  if (!premoveFrom || !premoveTo) return;
+  const from = premoveFrom;
+  const to   = premoveTo;
+  const promo = premovePromo;
+  clearPremove();
+  // Check if premove is still legal
+  const moves = chess.moves({ square: from, verbose: true });
+  const valid = moves.find(m => m.to === to);
+  if (!valid) { renderBoard(); updateStatus(); return; }
+  // Execute it
+  const piece = chess.get(from);
+  const toRank = to[1];
+  if (piece && piece.type === 'p' && (toRank === '8' || toRank === '1')) {
+    pendingPromo = { from, to };
+    showPromoDialog();
+    return;
+  }
+  doMove(from, to, promo);
+}
+
+// ── Right-click Arrows & Highlights ──────────────────────────────────────────
+let rcHighlights = new Set();   // highlighted squares
+let arrows       = [];          // [{from, to, color}]
+let rcDragFrom   = null;
+let rcDragStarted = false;
+
+function sqCenter(sqName, sqSize) {
+  const flip = playerColor === 'b';
+  const col = 'abcdefgh'.indexOf(sqName[0]);
+  const row = parseInt(sqName[1]) - 1;
+  const c = flip ? 7 - col : col;
+  const r = flip ? row : 7 - row;
+  return {
+    x: c * sqSize + sqSize / 2,
+    y: r * sqSize + sqSize / 2
+  };
+}
+
+function renderArrows() {
+  const layer = $('arrow-layer');
+  // Remove old arrows (keep defs)
+  const toRemove = [...layer.querySelectorAll('line, path, circle, polygon')];
+  toRemove.forEach(el => el.remove());
+
+  // Get actual square size from DOM
+  const firstSq = document.querySelector('.sq');
+  const sqSize = firstSq ? firstSq.offsetWidth : 92;
+  const boardSize = sqSize * 8;
+
+  // Update viewBox to match actual board size
+  layer.setAttribute('viewBox', `0 0 ${boardSize} ${boardSize}`);
+
+  arrows.forEach(({ from, to, color }) => {
+    const fc = sqCenter(from, sqSize);
+    const tc = sqCenter(to, sqSize);
+
+    const markerId = color === 'green' ? 'arr-head-green' : 'arr-head';
+    const strokeColor = color === 'green' ? 'rgba(100,200,100,0.88)' : 'rgba(220,60,60,0.85)';
+
+    // Shorten line so arrow head is visible
+    const dx = tc.x - fc.x;
+    const dy = tc.y - fc.y;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    const shorten = sqSize * 0.38;
+    const ex = tc.x - (dx / len) * shorten;
+    const ey = tc.y - (dy / len) * shorten;
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', fc.x);
+    line.setAttribute('y1', fc.y);
+    line.setAttribute('x2', ex);
+    line.setAttribute('y2', ey);
+    line.setAttribute('stroke', strokeColor);
+    line.setAttribute('stroke-width', sqSize * 0.16);
+    line.setAttribute('stroke-linecap', 'round');
+    line.setAttribute('marker-end', `url(#${markerId})`);
+    layer.appendChild(line);
+  });
+}
+
+function clearArrows() {
+  arrows = [];
+  renderArrows();
+}
+
+function toggleHighlight(sqName) {
+  if (rcHighlights.has(sqName)) {
+    rcHighlights.delete(sqName);
+  } else {
+    rcHighlights.add(sqName);
+  }
+  renderBoard();
+}
+
+function addArrow(from, to) {
+  // Toggle: if same arrow exists, remove it
+  const idx = arrows.findIndex(a => a.from === from && a.to === to);
+  if (idx !== -1) {
+    arrows.splice(idx, 1);
+  } else {
+    arrows.push({ from, to, color: 'red' });
+  }
+  renderArrows();
+}
+
+function setupRightClickOnBoard() {
+  const boardWrap = $('board-wrap');
+
+  // Prevent context menu on entire board area
+  boardWrap.addEventListener('contextmenu', e => e.preventDefault());
+
+  boardWrap.addEventListener('mousedown', e => {
+    if (e.button !== 2) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const sqEl = e.target.closest('.sq');
+    if (!sqEl) return;
+    rcDragFrom = sqEl.dataset.sq;
+    rcDragStarted = false;
+  });
+
+  // Track mouse move over entire document while dragging
+  document.addEventListener('mousemove', e => {
+    if (!(e.buttons & 2)) return;
+    if (!rcDragFrom) return;
+    const sqEl = e.target.closest ? e.target.closest('.sq') : null;
+    if (sqEl && sqEl.dataset.sq && sqEl.dataset.sq !== rcDragFrom) {
+      rcDragStarted = true;
+    }
+  });
+
+  document.addEventListener('mouseup', e => {
+    if (e.button !== 2) return;
+    if (!rcDragFrom) return;
+    e.preventDefault();
+
+    const sqEl = e.target.closest ? e.target.closest('.sq') : null;
+    const toSq = sqEl ? sqEl.dataset.sq : null;
+
+    if (rcDragStarted && toSq && toSq !== rcDragFrom) {
+      addArrow(rcDragFrom, toSq);
+    } else {
+      toggleHighlight(rcDragFrom);
+    }
+    rcDragFrom = null;
+    rcDragStarted = false;
+  });
+}
 
 // ── Navigation (Back / Forward / Hint / Resign) ───────────────────────────────
 let historyStack = [];   // full move history for forward navigation
@@ -1013,6 +1265,8 @@ function resign() {
 loadSounds();
 initEngine();
 renderBoard();
+setupRightClickOnBoard();
+renderArrows();
 </script>
 </body>
 </html>
