@@ -6,13 +6,10 @@
 <title>Bluerica Chess</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<!-- chess.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-<!-- chessboard.js -->
 <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
-
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -20,7 +17,7 @@
   --border: #2e2c28; --accent: #c8a45a; --accent-dim: rgba(200,164,90,0.12);
   --text: #e8e2d6; --muted: #7a7060; --green: #5ea87a; --red: #c95f5f;
 }
-html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-weight: 300; }
+html, body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-weight: 300; }
 
 header {
   display: flex; align-items: center; justify-content: space-between;
@@ -42,7 +39,6 @@ main {
   gap: 24px; padding: 24px 20px; flex-wrap: wrap;
 }
 
-/* Board area */
 .board-area { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .player-row { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 6px 2px; }
 .player-name {
@@ -53,38 +49,20 @@ main {
 .player-name.active { color: var(--text); }
 .turn-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: none; }
 .player-name.active .turn-dot { display: block; }
-.captured { font-size: 0.75rem; color: var(--muted); min-height: 16px; }
 
-/* Board wrapper with arrow overlay */
-#board-wrap { position: relative; }
-#board-wrap .board-b72b1 { border-radius: 2px; }
+#board-wrap { position: relative; width: 736px; }
+#arrow-canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 10; width: 736px; height: 736px; }
 
-/* Arrow canvas overlay */
-#arrow-canvas {
-  position: absolute; top: 0; left: 0;
-  pointer-events: none; z-index: 10;
-}
-
-/* Chessboard.js overrides - Lichess colors */
 .white-1e1d7 { background-color: #f0d9b5 !important; }
 .black-3c85d { background-color: #b58863 !important; }
-
-/* Square highlights */
-.highlight-yellow { box-shadow: inset 0 0 0 4px rgba(200,164,90,0.8) !important; }
 .highlight-rc { background-color: rgba(220,60,60,0.55) !important; }
 .highlight-premove { background-color: rgba(100,180,255,0.4) !important; }
 .highlight-hint { box-shadow: inset 0 0 0 4px rgba(100,200,100,0.9) !important; }
 
-/* Sidebar */
 .sidebar { width: 250px; display: flex; flex-direction: column; gap: 14px; padding-top: 4px; }
 .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
-.panel-head {
-  padding: 10px 14px; border-bottom: 1px solid var(--border);
-  font-family: 'JetBrains Mono', monospace; font-size: 0.6rem;
-  letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
-}
+.panel-head { padding: 10px 14px; border-bottom: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
 .panel-body { padding: 14px; }
-.cat-panel { overflow: hidden; }
 .cat-img-wrap img { width: 100%; display: block; filter: saturate(0.9); }
 
 .eval-row { display: flex; align-items: center; gap: 10px; }
@@ -93,40 +71,22 @@ main {
 .eval-num { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted); min-width: 36px; text-align: right; }
 
 .diff-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
-.diff-btn {
-  padding: 7px 4px; border: 1px solid var(--border); background: transparent;
-  color: var(--muted); border-radius: 4px; font-family: 'JetBrains Mono', monospace;
-  font-size: 0.62rem; letter-spacing: 0.04em; cursor: pointer; transition: all 0.15s; text-align: center;
-}
+.diff-btn { padding: 7px 4px; border: 1px solid var(--border); background: transparent; color: var(--muted); border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.04em; cursor: pointer; transition: all 0.15s; text-align: center; }
 .diff-btn:hover { border-color: var(--accent); color: var(--text); }
 .diff-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
 .diff-sub { display: block; font-size: 0.54rem; margin-top: 2px; opacity: 0.55; font-family: 'Inter', sans-serif; }
 
 .color-row { display: flex; gap: 8px; }
-.color-btn {
-  flex: 1; padding: 9px 6px; border: 1px solid var(--border); background: transparent;
-  border-radius: 4px; cursor: pointer; font-family: 'JetBrains Mono', monospace;
-  font-size: 0.68rem; letter-spacing: 0.04em; transition: all 0.15s;
-  display: flex; align-items: center; justify-content: center; gap: 5px; color: var(--muted);
-}
+.color-btn { flex: 1; padding: 9px 6px; border: 1px solid var(--border); background: transparent; border-radius: 4px; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; letter-spacing: 0.04em; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 5px; color: var(--muted); }
 .color-btn.w-btn { color: #d4c9a8; }
 .color-btn.w-btn.active { border-color: #d4c9a8; background: rgba(212,201,168,0.08); color: #e8dfc8; }
 .color-btn.b-btn.active { border-color: var(--text); color: var(--text); background: rgba(255,255,255,0.04); }
 
-.new-btn {
-  width: 100%; padding: 11px; background: var(--accent); color: #111210;
-  border: none; border-radius: 4px; font-family: 'JetBrains Mono', monospace;
-  font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase;
-  cursor: pointer; transition: background 0.15s; font-weight: 500;
-}
+.new-btn { width: 100%; padding: 11px; background: var(--accent); color: #111210; border: none; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: background 0.15s; font-weight: 500; }
 .new-btn:hover { background: #d4b06a; }
 
 .action-row { display: flex; gap: 8px; }
-.action-btn {
-  flex: 1; padding: 9px 6px; background: transparent; border: 1px solid var(--border);
-  color: var(--muted); border-radius: 4px; font-family: 'JetBrains Mono', monospace;
-  font-size: 0.65rem; letter-spacing: 0.04em; cursor: pointer; transition: all 0.15s; white-space: nowrap;
-}
+.action-btn { flex: 1; padding: 9px 6px; background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.04em; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
 .action-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
 .action-btn:disabled { opacity: 0.28; cursor: not-allowed; }
 .hint-btn:hover:not(:disabled) { border-color: #7ec8a0; color: #7ec8a0; }
@@ -136,9 +96,7 @@ main {
 .move-list::-webkit-scrollbar { width: 3px; }
 .move-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 .move-row { display: grid; grid-template-columns: 24px 1fr 1fr; gap: 4px; padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
-.mn { color: var(--border); }
-.mw { color: var(--text); }
-.mb { color: var(--muted); }
+.mn { color: var(--border); } .mw { color: var(--text); } .mb { color: var(--muted); }
 .move-row.latest .mw, .move-row.latest .mb { color: var(--accent); }
 .empty-moves { color: var(--border); font-size: 0.6rem; padding: 6px 0; }
 
@@ -148,10 +106,7 @@ main {
 .eng-dot.busy  { background: var(--accent); animation: blink 0.7s infinite; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
 
-.overlay {
-  display: none; position: fixed; inset: 0; z-index: 100;
-  background: rgba(0,0,0,0.82); align-items: center; justify-content: center; backdrop-filter: blur(6px);
-}
+.overlay { display: none; position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.82); align-items: center; justify-content: center; backdrop-filter: blur(6px); }
 .overlay.show { display: flex; }
 .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 36px 44px; text-align: center; max-width: 300px; }
 .modal-glyph { font-size: 2.6rem; margin-bottom: 12px; }
@@ -167,30 +122,26 @@ main {
 .promo-sq:hover { border-color: var(--accent); background: var(--accent-dim); }
 .promo-sq img { width: 52px; height: 52px; }
 
-@media (max-width: 1100px) {
-  main { flex-direction: column; align-items: center; padding: 16px; gap: 16px; }
-  .sidebar { width: 736px; max-width: 100%; }
-}
-
-@media (max-width: 780px) {
-  #board { width: calc(100vw - 32px) !important; }
-  .sidebar { width: calc(100vw - 32px); }
-  main { padding: 8px; }
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  main { flex-direction: column; align-items: center; padding: 12px; gap: 16px; }
+  #board-wrap { width: calc(100vw - 24px) !important; }
+  #board { width: calc(100vw - 24px) !important; }
+  #arrow-canvas { width: calc(100vw - 24px) !important; height: calc(100vw - 24px) !important; }
+  .sidebar { width: calc(100vw - 24px); }
+  .player-row { width: calc(100vw - 24px); }
 }
 </style>
 </head>
 <body>
-
 <header>
   <div class="logo">BLUERICA <em>chess</em></div>
   <div class="status-badge" id="status-badge">loading…</div>
 </header>
-
 <main>
   <div class="board-area">
     <div class="player-row">
       <span class="player-name" id="top-name"><span class="turn-dot"></span>BLUERICA</span>
-      <span class="captured" id="top-cap"></span>
     </div>
     <div id="board-wrap">
       <div id="board" style="width:736px"></div>
@@ -198,30 +149,17 @@ main {
     </div>
     <div class="player-row">
       <span class="player-name active" id="bot-name"><span class="turn-dot"></span>You</span>
-      <span class="captured" id="bot-cap"></span>
     </div>
   </div>
-
   <div class="sidebar">
-    <div class="eng-row">
-      <div class="eng-dot" id="eng-dot"></div>
-      <span id="eng-label">Loading engine…</span>
-    </div>
-
-    <div class="panel cat-panel">
-      <div class="cat-img-wrap"><img src="cat.jpg" alt="Bluerica"></div>
-    </div>
-
+    <div class="eng-row"><div class="eng-dot" id="eng-dot"></div><span id="eng-label">Loading engine…</span></div>
+    <div class="panel"><div class="cat-img-wrap"><img src="cat.jpg" alt="Bluerica"></div></div>
     <div class="panel">
       <div class="panel-head">Position</div>
       <div class="panel-body" style="padding:10px 14px;">
-        <div class="eval-row">
-          <div class="eval-bar"><div class="eval-fill" id="eval-fill"></div></div>
-          <div class="eval-num" id="eval-num">0.0</div>
-        </div>
+        <div class="eval-row"><div class="eval-bar"><div class="eval-fill" id="eval-fill"></div></div><div class="eval-num" id="eval-num">0.0</div></div>
       </div>
     </div>
-
     <div class="panel">
       <div class="panel-head">Difficulty</div>
       <div class="panel-body">
@@ -238,7 +176,6 @@ main {
         </div>
       </div>
     </div>
-
     <div class="panel">
       <div class="panel-head">Play as</div>
       <div class="panel-body">
@@ -248,9 +185,7 @@ main {
         </div>
       </div>
     </div>
-
     <button class="new-btn" id="new-btn">New Game</button>
-
     <div class="action-row">
       <button class="action-btn" id="back-btn">◀ Back</button>
       <button class="action-btn" id="fwd-btn">Forward ▶</button>
@@ -259,13 +194,10 @@ main {
       <button class="action-btn hint-btn" id="hint-btn">💡 Hint</button>
       <button class="action-btn resign-btn" id="resign-btn">🏳 Resign</button>
     </div>
-
     <div class="panel">
       <div class="panel-head">Move history</div>
       <div class="panel-body" style="padding:8px 14px;">
-        <div class="move-list" id="move-list">
-          <div class="empty-moves">— no moves yet —</div>
-        </div>
+        <div class="move-list" id="move-list"><div class="empty-moves">— no moves yet —</div></div>
       </div>
     </div>
   </div>
@@ -279,7 +211,6 @@ main {
     <button class="new-btn" id="modal-new-btn" style="max-width:180px;margin:0 auto;">Play Again</button>
   </div>
 </div>
-
 <div class="promo-overlay" id="promo-overlay">
   <div class="promo-box">
     <h3>Promote pawn</h3>
@@ -291,33 +222,28 @@ main {
 const $ = id => document.getElementById(id);
 const PIECE_PATH = 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/cburnett/';
 
-// ── State ─────────────────────────────────────────────────────────────────────
-let chess        = new Chess();
-let board        = null;
-let playerColor  = 'w';
-let engineReady  = false;
-let engineBusy   = false;
-let stockfish    = null;
-let resolveMove  = null;
-let skillLevel   = 0;
-let searchDepth  = 1;
-let engineDelay  = 1400;
-
-// Navigation
-let historySnap  = [];
-let viewIndex    = -1;
-
-// Premove
-let premoveFrom  = null;
-let premoveTo    = null;
-
-// Right-click arrows
+let chess = new Chess();
+let board = null;
+let playerColor = 'w';
+let engineReady = false;
+let engineBusy  = false;
+let stockfish   = null;
+let resolveMove = null;
+let skillLevel  = 0;
+let searchDepth = 1;
+let engineDelay = 1400;
+let historySnap = [];
+let viewIndex   = -1;
+let premoveFrom = null;
+let premoveTo   = null;
 let rcHighlights = {};
-let arrows       = [];
-let rcMouseFrom  = null;
-let rcDragging   = false;
+let arrows = [];
+let rcMouseFrom = null;
+let rcDragging  = false;
+let pendingPromoFrom = null;
+let pendingPromoTo   = null;
 
-// ── Sounds ────────────────────────────────────────────────────────────────────
+// Sounds
 const sounds = {};
 ['Move','Capture','Select','GenericNotify'].forEach(name => {
   const a = new Audio(`sounds/${name}.mp3`);
@@ -325,12 +251,9 @@ const sounds = {};
   sounds[name] = a;
 });
 function playSound(name) {
-  const s = sounds[name];
-  if (!s) return;
-  const c = s.cloneNode(); c.volume = 0.7;
-  c.play().catch(()=>{});
+  const s = sounds[name]; if (!s) return;
+  const c = s.cloneNode(); c.volume = 0.7; c.play().catch(()=>{});
 }
-
 const AC = window.AudioContext || window.webkitAudioContext;
 let ac = null;
 function playCheck() {
@@ -340,14 +263,13 @@ function playCheck() {
   [0,0.12,0.24].forEach((off,i) => {
     const o = ac.createOscillator(), g = ac.createGain();
     o.connect(g); g.connect(ac.destination);
-    o.type = 'sine'; o.frequency.setValueAtTime(880 - i*60, t+off);
-    g.gain.setValueAtTime(0.15, t+off);
-    g.gain.exponentialRampToValueAtTime(0.001, t+off+0.1);
+    o.type = 'sine'; o.frequency.setValueAtTime(880-i*60, t+off);
+    g.gain.setValueAtTime(0.15,t+off); g.gain.exponentialRampToValueAtTime(0.001,t+off+0.1);
     o.start(t+off); o.stop(t+off+0.1);
   });
 }
 
-// ── Stockfish ─────────────────────────────────────────────────────────────────
+// Engine
 function initEngine() {
   try {
     const code = `importScripts('https://cdn.jsdelivr.net/npm/stockfish.js@10.0.2/stockfish.js');`;
@@ -355,8 +277,8 @@ function initEngine() {
     stockfish = new Worker(URL.createObjectURL(blob));
     stockfish.onmessage = e => {
       const msg = e.data;
-      if (msg === 'uciok')    { stockfish.postMessage('isready'); return; }
-      if (msg === 'readyok')  {
+      if (msg === 'uciok')   { stockfish.postMessage('isready'); return; }
+      if (msg === 'readyok') {
         engineReady = true;
         $('eng-dot').className = 'eng-dot ready';
         $('eng-label').textContent = 'BLUERICA ready';
@@ -367,8 +289,7 @@ function initEngine() {
       if (msg && msg.startsWith('bestmove') && resolveMove) {
         const mv = msg.split(' ')[1];
         const cb = resolveMove; resolveMove = null;
-        cb(mv === '(none)' ? null : mv);
-        return;
+        cb(mv === '(none)' ? null : mv); return;
       }
       if (msg && msg.includes('score cp')) {
         const m = msg.match(/score cp (-?\d+)/);
@@ -376,20 +297,18 @@ function initEngine() {
       }
       if (msg && msg.includes('score mate')) {
         const m = msg.match(/score mate (-?\d+)/);
-        if (m) updateEval(parseInt(m[1]) > 0 ? 99 : -99);
+        if (m) updateEval(parseInt(m[1])>0?99:-99);
       }
     };
     stockfish.onerror = () => { $('eng-label').textContent = 'Engine error'; };
     stockfish.postMessage('uci');
   } catch(e) { $('eng-label').textContent = 'Engine unavailable'; }
 }
-
 function updateEval(cp) {
-  const pct = Math.min(Math.max(50 + cp * 3.5, 4), 96);
-  $('eval-fill').style.width = pct + '%';
-  $('eval-num').textContent = cp >= 99 ? '+M' : cp <= -99 ? '-M' : (cp>=0?'+':'')+cp.toFixed(1);
+  const pct = Math.min(Math.max(50+cp*3.5,4),96);
+  $('eval-fill').style.width = pct+'%';
+  $('eval-num').textContent = cp>=99?'+M':cp<=-99?'-M':(cp>=0?'+':'')+cp.toFixed(1);
 }
-
 async function getBestMove(fen) {
   return new Promise(resolve => {
     resolveMove = resolve;
@@ -399,22 +318,10 @@ async function getBestMove(fen) {
   });
 }
 
-// ── Board setup ───────────────────────────────────────────────────────────────
-function pieceTheme(piece) {
-  return PIECE_PATH + piece + '.svg';
-}
-
-function getBoardSize() {
-  if (window.innerWidth <= 900) {
-    return Math.min(window.innerWidth - 16, 480);
-  }
-  return Math.min(window.innerWidth - 320, 736);
-}
+// Board
+function pieceTheme(piece) { return PIECE_PATH + piece + '.svg'; }
 
 function initBoard() {
-  const boardSize = 736;
-  $('board').style.width = boardSize + 'px';
-
   board = Chessboard('board', {
     position: 'start',
     draggable: true,
@@ -426,89 +333,61 @@ function initBoard() {
     onMouseoverSquare: onMouseoverSquare,
     onMouseoutSquare:  onMouseoutSquare,
   });
-
   setupArrowCanvas();
   setupRightClick();
 }
 
 function onDragStart(source, piece) {
-  // Clear arrows on any interaction
   clearHighlightsAndArrows();
-
   if (chess.game_over()) return false;
-
-  // Premove: allow dragging own pieces even when engine thinking
   if (engineBusy || chess.turn() !== playerColor) {
     if (piece.search(playerColor === 'w' ? /^w/ : /^b/) !== -1) return true;
     return false;
   }
-
-  if ((playerColor === 'w' && piece.search(/^b/) !== -1) ||
-      (playerColor === 'b' && piece.search(/^w/) !== -1)) return false;
-
+  if ((playerColor==='w' && piece.search(/^b/)!==-1) || (playerColor==='b' && piece.search(/^w/)!==-1)) return false;
   return true;
 }
 
-function onDrop(source, target, piece, newPos, oldPos, orientation) {
+function onDrop(source, target, piece) {
   clearHighlightsAndArrows();
-
   if (source === target) return 'snapback';
-
-  // Premove
   if (engineBusy || chess.turn() !== playerColor) {
-    const myPiece = playerColor === 'w' ? /^w/ : /^b/;
-    if (piece.search(myPiece) !== -1) {
-      setPremove(source, target);
-      return; // don't snapback - board shows premove visually
-    }
+    const myPiece = playerColor==='w' ? /^w/ : /^b/;
+    if (piece.search(myPiece) !== -1) { setPremove(source, target); return; }
     return 'snapback';
   }
-
-  // Check promotion
   const p = chess.get(source);
   if (p && p.type === 'p') {
     const toRank = target[1];
-    if ((playerColor === 'w' && toRank === '8') || (playerColor === 'b' && toRank === '1')) {
+    if ((playerColor==='w'&&toRank==='8')||(playerColor==='b'&&toRank==='1')) {
       pendingPromoFrom = source; pendingPromoTo = target;
-      showPromoDialog();
-      return 'snapback'; // will re-move after promo choice
+      showPromoDialog(); return 'snapback';
     }
   }
-
   const move = chess.move({ from: source, to: target, promotion: 'q' });
   if (!move) return 'snapback';
-
   afterPlayerMove(move);
 }
 
-function onSnapEnd() {
-  board.position(chess.fen());
-}
+function onSnapEnd() { board.position(chess.fen()); }
 
 function onMouseoverSquare(square) {
   if (engineBusy || chess.turn() !== playerColor) return;
   const moves = chess.moves({ square, verbose: true });
   moves.forEach(m => {
-    $('board').querySelectorAll(`.square-${m.to}`).forEach(el => {
-      el.classList.add(chess.get(m.to) ? 'highlight-yellow' : 'highlight-yellow');
-    });
+    document.querySelectorAll(`.square-${m.to}`).forEach(el => el.classList.add('highlight-hint'));
   });
 }
-
 function onMouseoutSquare() {
-  // highlights are cleared on next move
+  document.querySelectorAll('.highlight-hint').forEach(el => el.classList.remove('highlight-hint'));
 }
-
-// ── Move logic ────────────────────────────────────────────────────────────────
-let pendingPromoFrom = null, pendingPromoTo = null;
 
 function afterPlayerMove(move) {
   board.position(chess.fen());
   highlightLastMove(move.from, move.to);
   playMoveSound(move);
   if (chess.in_check()) playCheck();
-  updateStatus();
-  updateMoveList();
+  updateStatus(); updateMoveList();
   if (chess.game_over()) { playSound('GenericNotify'); setTimeout(showGameOver, 500); return; }
   engineTurn();
 }
@@ -519,75 +398,51 @@ async function engineTurn() {
   $('status-badge').textContent = 'thinking…';
   $('status-badge').className = 'status-badge thinking';
   $('eng-dot').className = 'eng-dot busy';
-
   const best = await getBestMove(chess.fen());
-  await new Promise(r => setTimeout(r, engineDelay + Math.random() * 300));
-
+  await new Promise(r => setTimeout(r, engineDelay + Math.random()*300));
   engineBusy = false;
   $('eng-dot').className = 'eng-dot ready';
   if (!best) return;
-
   const from = best.slice(0,2), to = best.slice(2,4);
-  const promo = best[4] ? best[4] : 'q';
-  const move = chess.move({ from, to, promotion: promo });
-
+  const move = chess.move({ from, to, promotion: best[4]||'q' });
   board.position(chess.fen());
   highlightLastMove(from, to);
   playMoveSound(move);
   if (chess.in_check()) playCheck();
-  updateStatus();
-  updateMoveList();
-
+  updateStatus(); updateMoveList();
   if (chess.game_over()) { playSound('GenericNotify'); setTimeout(showGameOver, 500); return; }
-
-  // Execute premove if set
   if (premoveFrom) {
     const pf = premoveFrom, pt = premoveTo;
     clearPremove();
     setTimeout(() => {
       const mv = chess.move({ from: pf, to: pt, promotion: 'q' });
-      if (mv) afterPlayerMove(mv);
-      else { updateStatus(); }
+      if (mv) afterPlayerMove(mv); else updateStatus();
     }, 100);
   }
 }
 
 function playMoveSound(move) {
   if (!move) return;
-  if (move.flags && (move.flags.includes('c') || move.flags.includes('e'))) {
-    playSound('Capture');
-  } else {
-    playSound('Move');
-  }
+  if (move.flags && (move.flags.includes('c')||move.flags.includes('e'))) playSound('Capture');
+  else playSound('Move');
 }
 
-// ── Premove ───────────────────────────────────────────────────────────────────
 function setPremove(from, to) {
   clearPremove();
   premoveFrom = from; premoveTo = to;
-  // Visual: highlight premove squares
-  $('board').querySelectorAll(`.square-${from}, .square-${to}`).forEach(el => {
-    el.classList.add('highlight-premove');
-  });
+  document.querySelectorAll(`.square-${from}, .square-${to}`).forEach(el => el.classList.add('highlight-premove'));
   $('status-badge').textContent = 'thinking… · premove set';
   $('status-badge').className = 'status-badge thinking';
 }
-
 function clearPremove() {
-  if (premoveFrom) {
-    $('board').querySelectorAll(`.square-${premoveFrom}, .square-${premoveTo}`).forEach(el => {
-      el.classList.remove('highlight-premove');
-    });
-  }
+  if (premoveFrom) document.querySelectorAll(`.square-${premoveFrom}, .square-${premoveTo}`).forEach(el => el.classList.remove('highlight-premove'));
   premoveFrom = null; premoveTo = null;
 }
 
-// ── Right-click Arrows & Highlights ──────────────────────────────────────────
+// Right-click
 function setupRightClick() {
   const wrap = $('board-wrap');
-
   wrap.addEventListener('contextmenu', e => e.preventDefault());
-
   wrap.addEventListener('mousedown', e => {
     if (e.button !== 2) return;
     e.preventDefault();
@@ -595,23 +450,17 @@ function setupRightClick() {
     if (!sq) return;
     rcMouseFrom = sq; rcDragging = false;
   });
-
   document.addEventListener('mousemove', e => {
     if (!(e.buttons & 2) || !rcMouseFrom) return;
     const sq = squareFromEvent(e);
     if (sq && sq !== rcMouseFrom) rcDragging = true;
   });
-
   document.addEventListener('mouseup', e => {
     if (e.button !== 2 || !rcMouseFrom) return;
     e.preventDefault();
     const sq = squareFromEvent(e);
-
-    if (rcDragging && sq && sq !== rcMouseFrom) {
-      toggleArrow(rcMouseFrom, sq);
-    } else {
-      toggleHighlight(rcMouseFrom);
-    }
+    if (rcDragging && sq && sq !== rcMouseFrom) toggleArrow(rcMouseFrom, sq);
+    else toggleHighlight(rcMouseFrom);
     rcMouseFrom = null; rcDragging = false;
   });
 }
@@ -619,53 +468,41 @@ function setupRightClick() {
 function squareFromEvent(e) {
   const boardEl = $('board');
   const rect = boardEl.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
+  const x = e.clientX - rect.left, y = e.clientY - rect.top;
   const sz = rect.width / 8;
-  const col = Math.floor(x / sz);
-  const row = Math.floor(y / sz);
-  if (col < 0 || col > 7 || row < 0 || row > 7) return null;
+  const col = Math.floor(x/sz), row = Math.floor(y/sz);
+  if (col<0||col>7||row<0||row>7) return null;
   const flip = playerColor === 'b';
-  const file = flip ? 7 - col : col;
-  const rank = flip ? row : 7 - row;
-  return 'abcdefgh'[file] + (rank + 1);
+  const file = flip ? 7-col : col;
+  const rank = flip ? row : 7-row;
+  return 'abcdefgh'[file] + (rank+1);
 }
 
 function toggleHighlight(sq) {
   if (rcHighlights[sq]) {
     delete rcHighlights[sq];
-    $('board').querySelectorAll(`.square-${sq}`).forEach(el => el.classList.remove('highlight-rc'));
+    document.querySelectorAll(`.square-${sq}`).forEach(el => el.classList.remove('highlight-rc'));
   } else {
     rcHighlights[sq] = true;
-    $('board').querySelectorAll(`.square-${sq}`).forEach(el => el.classList.add('highlight-rc'));
+    document.querySelectorAll(`.square-${sq}`).forEach(el => el.classList.add('highlight-rc'));
   }
 }
-
 function toggleArrow(from, to) {
-  const idx = arrows.findIndex(a => a.from === from && a.to === to);
-  if (idx !== -1) arrows.splice(idx, 1);
-  else arrows.push({ from, to });
+  const idx = arrows.findIndex(a => a.from===from && a.to===to);
+  if (idx !== -1) arrows.splice(idx, 1); else arrows.push({from, to});
   drawArrows();
 }
-
 function clearHighlightsAndArrows() {
-  Object.keys(rcHighlights).forEach(sq => {
-    $('board').querySelectorAll(`.square-${sq}`).forEach(el => el.classList.remove('highlight-rc'));
-  });
-  rcHighlights = {};
-  arrows = [];
-  drawArrows();
+  Object.keys(rcHighlights).forEach(sq => document.querySelectorAll(`.square-${sq}`).forEach(el => el.classList.remove('highlight-rc')));
+  rcHighlights = {}; arrows = []; drawArrows();
 }
 
-// ── Arrow Canvas ──────────────────────────────────────────────────────────────
 function setupArrowCanvas() {
+  const canvas = $('arrow-canvas');
   const boardEl = $('board');
-  const canvas  = $('arrow-canvas');
   const sz = boardEl.offsetWidth;
-  canvas.width  = sz;
-  canvas.height = sz;
-  canvas.style.width  = sz + 'px';
-  canvas.style.height = sz + 'px';
+  canvas.width = sz; canvas.height = sz;
+  canvas.style.width = sz+'px'; canvas.style.height = sz+'px';
 }
 
 function sqCenterPx(sqName) {
@@ -674,152 +511,82 @@ function sqCenterPx(sqName) {
   const flip = playerColor === 'b';
   const col = 'abcdefgh'.indexOf(sqName[0]);
   const row = parseInt(sqName[1]) - 1;
-  const c = flip ? 7 - col : col;
-  const r = flip ? row : 7 - row;
-  return { x: c * sz + sz/2, y: (7-r) * sz + sz/2 };
+  const c = flip ? 7-col : col;
+  const r = flip ? row : 7-row;
+  return { x: c*sz + sz/2, y: (7-r)*sz + sz/2 };
 }
 
 function drawArrows() {
   const canvas = $('arrow-canvas');
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  const boardEl = $('board');
-  const sqSz = boardEl.offsetWidth / 8;
-
+  const sqSz = $('board').offsetWidth / 8;
   arrows.forEach(({ from, to }) => {
-    const fc = sqCenterPx(from);
-    const tc = sqCenterPx(to);
-    const dx = tc.x - fc.x, dy = tc.y - fc.y;
-    const len = Math.sqrt(dx*dx + dy*dy);
+    const fc = sqCenterPx(from), tc = sqCenterPx(to);
+    const dx = tc.x-fc.x, dy = tc.y-fc.y;
+    const len = Math.sqrt(dx*dx+dy*dy);
     const ux = dx/len, uy = dy/len;
-    const headLen = sqSz * 0.38;
-    const lineW = sqSz * 0.14;
-
-    // shorten end for arrowhead
-    const ex = tc.x - ux * headLen * 0.7;
-    const ey = tc.y - uy * headLen * 0.7;
-
+    const headLen = sqSz*0.38;
     ctx.save();
     ctx.strokeStyle = 'rgba(210,50,50,0.82)';
-    ctx.fillStyle   = 'rgba(210,50,50,0.82)';
-    ctx.lineWidth   = lineW;
-    ctx.lineCap     = 'round';
-
-    // Line
+    ctx.fillStyle = 'rgba(210,50,50,0.82)';
+    ctx.lineWidth = sqSz*0.14; ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(fc.x, fc.y);
-    ctx.lineTo(ex, ey);
+    ctx.lineTo(tc.x - ux*headLen*0.7, tc.y - uy*headLen*0.7);
     ctx.stroke();
-
-    // Arrowhead
-    const angle = Math.atan2(dy, dx);
-    const spread = 0.45;
+    const angle = Math.atan2(dy, dx), spread = 0.45;
     ctx.beginPath();
     ctx.moveTo(tc.x, tc.y);
-    ctx.lineTo(tc.x - headLen * Math.cos(angle - spread), tc.y - headLen * Math.sin(angle - spread));
-    ctx.lineTo(tc.x - headLen * Math.cos(angle + spread), tc.y - headLen * Math.sin(angle + spread));
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
+    ctx.lineTo(tc.x - headLen*Math.cos(angle-spread), tc.y - headLen*Math.sin(angle-spread));
+    ctx.lineTo(tc.x - headLen*Math.cos(angle+spread), tc.y - headLen*Math.sin(angle+spread));
+    ctx.closePath(); ctx.fill(); ctx.restore();
   });
 }
 
-// ── Highlights last move ──────────────────────────────────────────────────────
 function highlightLastMove(from, to) {
-  $('board').querySelectorAll('.square-55d63').forEach(el => el.classList.remove('square-55d63'));
-  $('board').querySelectorAll(`.square-${from}, .square-${to}`).forEach(el => {
-    el.style.background = '';
-  });
-  // chessboard.js uses square-55d63 class for highlighting
-  // Use CSS directly instead
-  $('board').querySelectorAll(`.square-${from}`).forEach(el => {
-    el.style.boxShadow = 'inset 0 0 0 92px rgba(200,164,90,0.22)';
-  });
-  $('board').querySelectorAll(`.square-${to}`).forEach(el => {
-    el.style.boxShadow = 'inset 0 0 0 92px rgba(200,164,90,0.38)';
-  });
+  document.querySelectorAll('[style*="box-shadow"]').forEach(el => el.style.boxShadow = '');
+  document.querySelectorAll(`.square-${from}`).forEach(el => el.style.boxShadow = 'inset 0 0 0 99px rgba(200,164,90,0.22)');
+  document.querySelectorAll(`.square-${to}`).forEach(el => el.style.boxShadow = 'inset 0 0 0 99px rgba(200,164,90,0.4)');
 }
 
-function clearLastMoveHighlight() {
-  $('board').querySelectorAll('.square-55d63, [data-square]').forEach(el => {
-    el.style.boxShadow = '';
-  });
-}
-
-// ── Status & UI ───────────────────────────────────────────────────────────────
 function updateStatus() {
   if (chess.game_over()) return;
-  if (chess.in_check()) {
-    $('status-badge').textContent = 'check!';
-    $('status-badge').className = 'status-badge check';
-  } else if (chess.turn() === playerColor) {
-    $('status-badge').textContent = 'your move';
-    $('status-badge').className = 'status-badge your-turn';
-  }
-  updatePlayerBars();
-}
-
-function updatePlayerBars() {
+  if (chess.in_check()) { $('status-badge').textContent = 'check!'; $('status-badge').className = 'status-badge check'; }
+  else if (chess.turn() === playerColor) { $('status-badge').textContent = 'your move'; $('status-badge').className = 'status-badge your-turn'; }
   const turn = chess.turn();
   const topIsEngine = playerColor === 'w';
-  const topActive = topIsEngine ? turn === 'b' : turn === 'w';
-  $('top-name').className = 'player-name' + (topActive ? ' active' : '');
-  $('bot-name').className = 'player-name' + (!topActive ? ' active' : '');
+  $('top-name').className = 'player-name' + ((topIsEngine ? turn==='b' : turn==='w') ? ' active' : '');
+  $('bot-name').className = 'player-name' + ((topIsEngine ? turn==='w' : turn==='b') ? ' active' : '');
 }
 
 function updateMoveList() {
   const history = chess.history();
-  if (!history.length) {
-    $('move-list').innerHTML = '<div class="empty-moves">— no moves yet —</div>';
-    return;
-  }
+  if (!history.length) { $('move-list').innerHTML = '<div class="empty-moves">— no moves yet —</div>'; return; }
   let html = '';
   for (let i = 0; i < history.length; i += 2) {
-    const num = Math.floor(i/2) + 1;
-    const w = history[i] || '';
-    const b = history[i+1] || '';
-    const isLatest = i >= history.length - 2;
-    html += `<div class="move-row${isLatest?' latest':''}">
-      <span class="mn">${num}.</span>
-      <span class="mw">${w}</span>
-      <span class="mb">${b}</span>
-    </div>`;
+    const num = Math.floor(i/2)+1, w = history[i]||'', b = history[i+1]||'';
+    html += `<div class="move-row${i>=history.length-2?' latest':''}"><span class="mn">${num}.</span><span class="mw">${w}</span><span class="mb">${b}</span></div>`;
   }
-  const ml = $('move-list');
-  ml.innerHTML = html;
-  ml.scrollTop = ml.scrollHeight;
+  const ml = $('move-list'); ml.innerHTML = html; ml.scrollTop = ml.scrollHeight;
 }
 
 function showGameOver() {
   const won = chess.in_checkmate() && chess.turn() !== playerColor;
   let icon, title, msg;
-  if (chess.in_checkmate()) {
-    icon = won ? '🏆' : '😿';
-    title = won ? 'You win!' : 'Checkmate';
-    msg = won ? 'You checkmated BLUERICA! 😺' : 'BLUERICA wins this round. 😼';
-  } else if (chess.in_stalemate()) {
-    icon = '🤝'; title = 'Stalemate'; msg = 'No legal moves. Draw!';
-  } else {
-    icon = '½'; title = 'Draw'; msg = 'The game ended in a draw.';
-  }
-  $('modal-glyph').textContent = icon;
-  $('modal-title').textContent = title;
-  $('modal-msg').textContent = msg;
+  if (chess.in_checkmate()) { icon = won?'🏆':'😿'; title = won?'You win!':'Checkmate'; msg = won?'You checkmated BLUERICA! 😺':'BLUERICA wins this round. 😼'; }
+  else if (chess.in_stalemate()) { icon='🤝'; title='Stalemate'; msg='No legal moves. Draw!'; }
+  else { icon='½'; title='Draw'; msg='The game ended in a draw.'; }
+  $('modal-glyph').textContent = icon; $('modal-title').textContent = title; $('modal-msg').textContent = msg;
   $('overlay').classList.add('show');
-  $('status-badge').textContent = title.toLowerCase();
-  $('status-badge').className = 'status-badge';
+  $('status-badge').textContent = title.toLowerCase(); $('status-badge').className = 'status-badge';
 }
 
-// ── Promotion ─────────────────────────────────────────────────────────────────
 function showPromoDialog() {
-  const color = playerColor === 'w' ? 'w' : 'b';
-  const types = ['Q','R','B','N'];
-  const row = $('promo-row');
-  row.innerHTML = '';
+  const color = playerColor==='w'?'w':'b', types=['Q','R','B','N'];
+  const row = $('promo-row'); row.innerHTML = '';
   types.forEach(t => {
-    const sq = document.createElement('div');
-    sq.className = 'promo-sq';
+    const sq = document.createElement('div'); sq.className = 'promo-sq';
     sq.innerHTML = `<img src="${pieceTheme(color+t)}" alt="${t}">`;
     sq.addEventListener('click', () => {
       $('promo-overlay').classList.remove('show');
@@ -834,142 +601,98 @@ function showPromoDialog() {
   $('promo-overlay').classList.add('show');
 }
 
-// ── Navigation ────────────────────────────────────────────────────────────────
+// Navigation
 function backMove() {
-  if (viewIndex === -1) {
-    historySnap = chess.history({ verbose: true });
-    viewIndex = historySnap.length;
-  }
-  if (viewIndex <= 0) return;
+  if (viewIndex===-1) { historySnap = chess.history({verbose:true}); viewIndex = historySnap.length; }
+  if (viewIndex<=0) return;
   viewIndex--;
-  showPosition(viewIndex);
-  playSound('Select');
+  showPosition(viewIndex); playSound('Select');
 }
-
 function forwardMove() {
-  if (viewIndex === -1 || viewIndex >= historySnap.length) return;
+  if (viewIndex===-1||viewIndex>=historySnap.length) return;
   viewIndex++;
-  showPosition(viewIndex);
-  playSound('Select');
-  if (viewIndex === historySnap.length) viewIndex = -1;
+  showPosition(viewIndex); playSound('Select');
+  if (viewIndex===historySnap.length) viewIndex = -1;
 }
-
 function showPosition(idx) {
   const temp = new Chess();
-  for (let i = 0; i < idx; i++) {
-    const m = historySnap[i];
-    temp.move({ from: m.from, to: m.to, promotion: m.promotion });
-  }
+  for (let i=0;i<idx;i++) { const m=historySnap[i]; temp.move({from:m.from,to:m.to,promotion:m.promotion}); }
   board.position(temp.fen(), false);
-  clearLastMoveHighlight();
-  if (idx > 0) highlightLastMove(historySnap[idx-1].from, historySnap[idx-1].to);
-  const pill = $('status-badge');
-  if (viewIndex !== -1) {
-    pill.textContent = `move ${idx} / ${historySnap.length}`;
-    pill.className = 'status-badge thinking';
-  }
+  document.querySelectorAll('[style*="box-shadow"]').forEach(el => el.style.boxShadow='');
+  if (idx>0) highlightLastMove(historySnap[idx-1].from, historySnap[idx-1].to);
+  if (viewIndex!==-1) { $('status-badge').textContent=`move ${idx}/${historySnap.length}`; $('status-badge').className='status-badge thinking'; }
 }
 
 async function showHint() {
-  if (!engineReady || engineBusy || viewIndex !== -1) return;
-  if (chess.turn() !== playerColor) return;
-  $('hint-btn').disabled = true;
-  $('hint-btn').textContent = '⏳';
+  if (!engineReady||engineBusy||viewIndex!==-1||chess.turn()!==playerColor) return;
+  $('hint-btn').disabled=true; $('hint-btn').textContent='⏳';
   const best = await getBestMove(chess.fen());
-  $('hint-btn').disabled = false;
-  $('hint-btn').textContent = '💡 Hint';
+  $('hint-btn').disabled=false; $('hint-btn').textContent='💡 Hint';
   if (!best) return;
-  const from = best.slice(0,2), to = best.slice(2,4);
-  $('board').querySelectorAll(`.square-${from}, .square-${to}`).forEach(el => el.classList.add('highlight-hint'));
-  setTimeout(() => {
-    $('board').querySelectorAll(`.square-${from}, .square-${to}`).forEach(el => el.classList.remove('highlight-hint'));
-  }, 2000);
+  const from=best.slice(0,2), to=best.slice(2,4);
+  document.querySelectorAll(`.square-${from},.square-${to}`).forEach(el=>el.classList.add('highlight-hint'));
+  setTimeout(()=>document.querySelectorAll(`.square-${from},.square-${to}`).forEach(el=>el.classList.remove('highlight-hint')),2000);
 }
 
 function resign() {
   if (chess.game_over()) return;
   if (!confirm('Resign this game?')) return;
   playSound('GenericNotify');
-  $('modal-glyph').textContent = '🏳';
-  $('modal-title').textContent = 'You resigned';
-  $('modal-msg').textContent = 'BLUERICA wins. 😼';
+  $('modal-glyph').textContent='🏳'; $('modal-title').textContent='You resigned'; $('modal-msg').textContent='BLUERICA wins. 😼';
   $('overlay').classList.add('show');
-  $('status-badge').textContent = 'resigned';
-  $('status-badge').className = 'status-badge';
+  $('status-badge').textContent='resigned'; $('status-badge').className='status-badge';
 }
 
-// ── New Game ──────────────────────────────────────────────────────────────────
 function newGame() {
-  chess = new Chess();
-  historySnap = []; viewIndex = -1;
-  clearPremove();
-  clearHighlightsAndArrows();
-  clearLastMoveHighlight();
+  chess = new Chess(); historySnap=[]; viewIndex=-1;
+  clearPremove(); clearHighlightsAndArrows();
+  document.querySelectorAll('[style*="box-shadow"]').forEach(el=>el.style.boxShadow='');
   engineBusy = false;
-  board.orientation(playerColor === 'w' ? 'white' : 'black');
+  board.orientation(playerColor==='w'?'white':'black');
   board.start();
   $('overlay').classList.remove('show');
-  updateEval(0);
-  updateMoveList();
-  updateStatus();
-  $('top-name').innerHTML = `<span class="turn-dot"></span>${playerColor === 'w' ? 'BLUERICA' : 'You'}`;
-  $('bot-name').innerHTML = `<span class="turn-dot"></span>${playerColor === 'w' ? 'You' : 'BLUERICA'}`;
-  if (playerColor === 'b') engineTurn();
+  updateEval(0); updateMoveList(); updateStatus();
+  $('top-name').innerHTML = `<span class="turn-dot"></span>${playerColor==='w'?'BLUERICA':'You'}`;
+  $('bot-name').innerHTML = `<span class="turn-dot"></span>${playerColor==='w'?'You':'BLUERICA'}`;
+  if (playerColor==='b') engineTurn();
 }
 
-// ── Controls ──────────────────────────────────────────────────────────────────
-// Restore saved difficulty
+// Restore difficulty
 (function() {
   const saved = localStorage.getItem('bluerica-level');
   if (saved) {
     const btn = document.querySelector(`.diff-btn[data-skill="${saved}"]`);
     if (btn) {
-      document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
-      skillLevel  = parseInt(btn.dataset.skill);
-      searchDepth = parseInt(btn.dataset.depth);
-      engineDelay = parseInt(btn.dataset.delay) || 1400;
+      skillLevel=parseInt(btn.dataset.skill); searchDepth=parseInt(btn.dataset.depth); engineDelay=parseInt(btn.dataset.delay)||1400;
     }
   }
 })();
 
 document.querySelectorAll('.diff-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
-    skillLevel  = parseInt(btn.dataset.skill);
-    searchDepth = parseInt(btn.dataset.depth);
-    engineDelay = parseInt(btn.dataset.delay) || 300;
+    skillLevel=parseInt(btn.dataset.skill); searchDepth=parseInt(btn.dataset.depth); engineDelay=parseInt(btn.dataset.delay)||300;
     localStorage.setItem('bluerica-level', btn.dataset.skill);
   });
 });
 
-$('btn-w').addEventListener('click', () => {
-  $('btn-w').classList.add('active'); $('btn-b').classList.remove('active');
-  playerColor = 'w'; newGame();
-});
-$('btn-b').addEventListener('click', () => {
-  $('btn-b').classList.add('active'); $('btn-w').classList.remove('active');
-  playerColor = 'b'; newGame();
-});
+$('btn-w').addEventListener('click', ()=>{ $('btn-w').classList.add('active'); $('btn-b').classList.remove('active'); playerColor='w'; newGame(); });
+$('btn-b').addEventListener('click', ()=>{ $('btn-b').classList.add('active'); $('btn-w').classList.remove('active'); playerColor='b'; newGame(); });
 $('new-btn').addEventListener('click', newGame);
 $('modal-new-btn').addEventListener('click', newGame);
 $('back-btn').addEventListener('click', backMove);
 $('fwd-btn').addEventListener('click', forwardMove);
 $('hint-btn').addEventListener('click', showHint);
 $('resign-btn').addEventListener('click', resign);
+$('board-wrap').addEventListener('mousedown', e => { if (e.button===0) clearHighlightsAndArrows(); });
 
-// Clear arrows on left click
-$('board-wrap').addEventListener('mousedown', e => {
-  if (e.button === 0) clearHighlightsAndArrows();
-});
-
-// ── Boot ──────────────────────────────────────────────────────────────────────
+// Boot
 initBoard();
 initEngine();
 updateStatus();
-
-
 </script>
 </body>
 </html>
