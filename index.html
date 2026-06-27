@@ -71,13 +71,13 @@ main {
 /* BOARD */
 #board-wrap { position: relative; }
 #board {
-  display: grid; grid-template-columns: repeat(8, 80px); grid-template-rows: repeat(8, 80px);
+  display: grid; grid-template-columns: repeat(8, 92px); grid-template-rows: repeat(8, 92px);
   border: 2px solid #3a3530;
   box-shadow: 0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px rgba(200,164,90,0.08);
 }
 
 .sq {
-  width: 80px; height: 80px; position: relative;
+  width: 92px; height: 92px; position: relative;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
 }
@@ -91,7 +91,7 @@ main {
 /* Move hints */
 .hint {
   position: absolute; pointer-events: none; border-radius: 50%;
-  width: 32px; height: 32px;
+  width: 36px; height: 36px;
   background: rgba(0,0,0,0.18);
   display: none;
 }
@@ -118,7 +118,7 @@ main {
 .sq.dark  .coord-r, .sq.dark  .coord-f { color: var(--light-sq); }
 
 /* SVG pieces */
-.piece-svg { width: 68px; height: 68px; position: relative; z-index: 1; pointer-events: none; transition: transform 0.1s; }
+.piece-svg { width: 78px; height: 78px; position: relative; z-index: 1; pointer-events: none; transition: transform 0.1s; }
 .sq:hover .piece-svg { transform: scale(1.06); }
 
 /* SIDEBAR */
@@ -136,14 +136,7 @@ main {
 .cat-panel { border-color: var(--border); overflow: hidden; }
 .cat-img-wrap { position: relative; }
 .cat-img-wrap img { width: 100%; display: block; filter: saturate(0.9); }
-.cat-caption {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  background: linear-gradient(transparent, rgba(10,10,8,0.92));
-  padding: 20px 12px 10px;
-  font-family: 'Playfair Display', serif;
-  font-size: 0.8rem; font-style: italic;
-  color: var(--accent); letter-spacing: 0.02em;
-}
+
 
 /* Eval */
 .eval-row { display: flex; align-items: center; gap: 10px; }
@@ -152,7 +145,7 @@ main {
 .eval-num { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted); min-width: 36px; text-align: right; }
 
 /* Difficulty */
-.diff-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.diff-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
 .diff-btn {
   padding: 7px 4px; border: 1px solid var(--border); background: transparent;
   color: var(--muted); border-radius: 4px; font-family: 'JetBrains Mono', monospace;
@@ -243,7 +236,7 @@ main {
 .piece-svg.dragging { opacity: 0; }
 .drag-ghost {
   position: fixed; pointer-events: none; z-index: 1000;
-  width: 84px; height: 84px; transform: translate(-50%, -50%);
+  width: 96px; height: 96px; transform: translate(-50%, -50%);
 }
 .sq.drag-over { outline: 3px solid rgba(200,164,90,0.9); outline-offset: -3px; }
 
@@ -268,9 +261,9 @@ main {
 
 @media (max-width: 900px) {
   main { flex-direction: column; align-items: center; padding: 12px; }
-  #board { grid-template-columns: repeat(8, 44px); grid-template-rows: repeat(8, 44px); }
-  .sq { width: 44px; height: 44px; }
-  .piece-svg { width: 38px; height: 38px; }
+  #board { grid-template-columns: repeat(8, 48px); grid-template-rows: repeat(8, 48px); }
+  .sq { width: 48px; height: 48px; }
+  .piece-svg { width: 42px; height: 42px; }
   .hint { width: 20px; height: 20px; }
   .sidebar { width: 100%; max-width: 360px; }
 }
@@ -286,7 +279,7 @@ main {
 <main>
   <div class="board-area">
     <div class="player-row" id="top-row">
-      <span class="player-name" id="top-name"><span class="turn-dot"></span>Stockfish</span>
+      <span class="player-name" id="top-name"><span class="turn-dot"></span>BLUERICA</span>
       <span class="captured" id="top-cap"></span>
     </div>
     <div id="board-wrap"><div id="board"></div></div>
@@ -301,14 +294,14 @@ main {
     <!-- Engine status -->
     <div class="eng-row">
       <div class="eng-dot" id="eng-dot"></div>
-      <span id="eng-label">Loading Stockfish…</span>
+      <span id="eng-label">Loading BLUERICA…</span>
     </div>
 
     <!-- Cat mascot -->
     <div class="panel cat-panel">
       <div class="cat-img-wrap">
         <img src="cat.jpg" alt="Chess cat" />
-        <div class="cat-caption">Bluerica is watching.</div>
+        
       </div>
     </div>
 
@@ -328,12 +321,15 @@ main {
       <div class="panel-head">Difficulty</div>
       <div class="panel-body">
         <div class="diff-grid">
-          <button class="diff-btn" data-skill="1"  data-depth="2">1<span class="diff-sub">Beginner</span></button>
-          <button class="diff-btn" data-skill="4"  data-depth="4">2<span class="diff-sub">Easy</span></button>
-          <button class="diff-btn" data-skill="8"  data-depth="6">3<span class="diff-sub">Medium</span></button>
-          <button class="diff-btn" data-skill="12" data-depth="9">4<span class="diff-sub">Hard</span></button>
-          <button class="diff-btn" data-skill="17" data-depth="13">5<span class="diff-sub">Expert</span></button>
-          <button class="diff-btn active" data-skill="20" data-depth="18">∞<span class="diff-sub">Max</span></button>
+          <button class="diff-btn" data-skill="0"  data-depth="1" data-delay="1200">1<span class="diff-sub">Newbie</span></button>
+          <button class="diff-btn" data-skill="1"  data-depth="1" data-delay="1000">2<span class="diff-sub">Beginner</span></button>
+          <button class="diff-btn" data-skill="3"  data-depth="2" data-delay="900">3<span class="diff-sub">Easy</span></button>
+          <button class="diff-btn" data-skill="5"  data-depth="3" data-delay="700">4<span class="diff-sub">Casual</span></button>
+          <button class="diff-btn" data-skill="8"  data-depth="5" data-delay="600">5<span class="diff-sub">Medium</span></button>
+          <button class="diff-btn" data-skill="11" data-depth="7" data-delay="500">6<span class="diff-sub">Club</span></button>
+          <button class="diff-btn" data-skill="14" data-depth="10" data-delay="400">7<span class="diff-sub">Hard</span></button>
+          <button class="diff-btn" data-skill="17" data-depth="13" data-delay="350">8<span class="diff-sub">Expert</span></button>
+          <button class="diff-btn active" data-skill="20" data-depth="18" data-delay="300">∞<span class="diff-sub">Max</span></button>
         </div>
       </div>
     </div>
@@ -494,7 +490,7 @@ function initEngine() {
       if (msg === 'readyok') {
         engineReady = true;
         $('eng-dot').className = 'eng-dot ready';
-        $('eng-label').textContent = 'Stockfish ready';
+        $('eng-label').textContent = 'BLUERICA ready';
         $('status-badge').textContent = 'your move';
         $('status-badge').className = 'status-badge your-turn';
         return;
@@ -684,8 +680,8 @@ async function engineTurn() {
 
   const best = await getBestMove(chess.fen());
 
-  // Delay so it feels natural, not instant
-  await new Promise(r => setTimeout(r, 320 + Math.random() * 400));
+  // Delay so it feels natural
+  await new Promise(r => setTimeout(r, engineDelay + Math.random() * 300));
 
   engineBusy = false;
   $('eng-dot').className = 'eng-dot ready';
@@ -727,13 +723,13 @@ function updatePlayerBars() {
     topEl.className = 'player-name' + (turn === 'b' ? ' active' : '');
     botEl.className = 'player-name' + (turn === 'w' ? ' active' : '');
     $('top-name').childNodes[1] && ($('top-name').childNodes[0].textContent = '');
-    topEl.innerHTML = `<span class="turn-dot"></span>Stockfish`;
+    topEl.innerHTML = `<span class="turn-dot"></span>BLUERICA`;
     botEl.innerHTML = `<span class="turn-dot"></span>You`;
   } else {
     topEl.className = 'player-name' + (turn === 'w' ? ' active' : '');
     botEl.className = 'player-name' + (turn === 'b' ? ' active' : '');
     topEl.innerHTML = `<span class="turn-dot"></span>You`;
-    botEl.innerHTML = `<span class="turn-dot"></span>Stockfish`;
+    botEl.innerHTML = `<span class="turn-dot"></span>BLUERICA`;
   }
 }
 
@@ -791,7 +787,7 @@ function showGameOver() {
   if (chess.in_checkmate()) {
     icon = won ? '🏆' : '😿';
     title = won ? 'You win!' : 'Checkmate';
-    msg = won ? 'You checkmated Stockfish. Impressive.' : 'Stockfish delivers the final blow. Try again?';
+    msg = won ? 'You checkmated BLUERICA. Impressive! 😺' : 'BLUERICA wins this round. Try again? 😼';
   } else if (chess.in_stalemate()) {
     icon = '🤝'; title = 'Stalemate'; msg = 'No legal moves available. The game is drawn.';
   } else if (chess.in_draw()) {
@@ -897,12 +893,15 @@ function setupDrag(sqEl, sqName) {
 }
 
 // ── Controls ──────────────────────────────────────────────────────────────────
+let engineDelay = 300;
+
 document.querySelectorAll('.diff-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    skillLevel  = parseInt(btn.dataset.skill);
-    searchDepth = parseInt(btn.dataset.depth);
+    skillLevel   = parseInt(btn.dataset.skill);
+    searchDepth  = parseInt(btn.dataset.depth);
+    engineDelay  = parseInt(btn.dataset.delay) || 300;
   });
 });
 
@@ -1004,7 +1003,7 @@ function resign() {
   playSound('notify');
   $('modal-glyph').textContent = '🏳';
   $('modal-title').textContent = 'You resigned';
-  $('modal-msg').textContent = 'Better luck next time. Stockfish wins.';
+  $('modal-msg').textContent = 'Better luck next time. BLUERICA wins. 😼';
   $('overlay').classList.add('show');
   $('status-badge').textContent = 'resigned';
   $('status-badge').className = 'status-badge';
