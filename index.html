@@ -2,245 +2,215 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bluerica Chess</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#111210;--surface:#1a1917;--surface2:#222120;
-  --border:#2e2c28;--accent:#c8a45a;--accent-dim:rgba(200,164,90,0.12);
-  --text:#e8e2d6;--muted:#7a7060;--green:#5ea87a;--red:#c95f5f;
-  --light-sq:#f0d9b5;--dark-sq:#b58863;
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #111210; --surface: #1a1917; --surface2: #222120;
+  --border: #2e2c28; --accent: #c8a45a; --accent-dim: rgba(200,164,90,0.12);
+  --text: #e8e2d6; --muted: #7a7060; --green: #5ea87a; --red: #c95f5f;
 }
-html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-weight:300}
+html, body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-weight: 300; }
 
-/* ── HEADER ── */
-header{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:var(--surface);border-bottom:1px solid var(--border)}
-.logo{font-family:'Playfair Display',serif;font-size:1rem;color:var(--accent)}
-.logo em{font-style:italic;color:var(--muted);font-size:.85em;margin-left:6px}
-.status-badge{font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:4px 10px;border-radius:20px;border:1px solid var(--border);color:var(--muted);letter-spacing:.08em;transition:all .3s}
-.status-badge.your-turn{border-color:var(--green);color:var(--green)}
-.status-badge.thinking{border-color:var(--accent);color:var(--accent)}
-.status-badge.check{border-color:var(--red);color:var(--red)}
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 28px; background: var(--surface); border-bottom: 1px solid var(--border);
+}
+.logo { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--accent); }
+.logo em { font-style: italic; color: var(--muted); font-size: 0.85em; margin-left: 6px; }
+.status-badge {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
+  padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border);
+  color: var(--muted); letter-spacing: 0.08em; transition: all 0.3s;
+}
+.status-badge.your-turn { border-color: var(--green); color: var(--green); }
+.status-badge.thinking  { border-color: var(--accent); color: var(--accent); }
+.status-badge.check     { border-color: var(--red); color: var(--red); }
 
-/* ── PAGES ── */
-.page{display:none}
-.page.active{display:block}
+main {
+  display: flex; align-items: flex-start; justify-content: center;
+  gap: 24px; padding: 24px 20px; flex-wrap: wrap;
+}
 
-/* ── SETUP PAGE ── */
-.setup-wrap{max-width:500px;margin:0 auto;padding:32px 20px;display:flex;flex-direction:column;gap:20px;align-items:center}
-.cat-setup{width:100%;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
-.cat-setup img{width:100%;display:block;filter:saturate(.9)}
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;width:100%}
-.panel-head{padding:10px 14px;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-.panel-body{padding:14px}
-.diff-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.diff-btn{padding:8px 4px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.04em;cursor:pointer;transition:all .15s;text-align:center}
-.diff-btn:hover{border-color:var(--accent);color:var(--text)}
-.diff-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
-.diff-sub{display:block;font-size:.54rem;margin-top:2px;opacity:.55;font-family:'Inter',sans-serif}
-.color-row{display:flex;gap:8px}
-.color-btn{flex:1;padding:10px;border:1px solid var(--border);background:transparent;border-radius:4px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.04em;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;color:var(--muted)}
-.color-btn.w-btn{color:#d4c9a8}
-.color-btn.w-btn.active{border-color:#d4c9a8;background:rgba(212,201,168,.08);color:#e8dfc8}
-.color-btn.b-btn.active{border-color:var(--text);color:var(--text);background:rgba(255,255,255,.04)}
-.start-btn{width:100%;padding:14px;background:var(--accent);color:#111210;border:none;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;font-weight:500;transition:background .15s}
-.start-btn:hover{background:#d4b06a}
-.eng-row{display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--muted)}
-.eng-dot{width:5px;height:5px;border-radius:50%;background:var(--muted);transition:background .3s;flex-shrink:0}
-.eng-dot.ready{background:var(--green)}
-.eng-dot.busy{background:var(--accent);animation:blink .7s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.board-area { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.player-row { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 6px 2px; }
+.player-name {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+  letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase;
+  display: flex; align-items: center; gap: 8px;
+}
+.player-name.active { color: var(--text); }
+.turn-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: none; }
+.player-name.active .turn-dot { display: block; }
 
-/* ── GAME PAGE ── */
-.game-wrap{display:flex;align-items:flex-start;justify-content:center;gap:20px;padding:16px;flex-wrap:wrap}
-.board-col{display:flex;flex-direction:column;align-items:center;gap:6px}
-.player-bar{width:100%;display:flex;align-items:center;justify-content:space-between;padding:4px 2px}
-.player-name{font-family:'JetBrains Mono',monospace;font-size:.72rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;display:flex;align-items:center;gap:8px}
-.player-name.active{color:var(--text)}
-.turn-dot{width:6px;height:6px;border-radius:50%;background:var(--green);display:none}
-.player-name.active .turn-dot{display:block}
+#board-wrap { position: relative; width: 736px; }
+#arrow-canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 10; width: 736px; height: 736px; }
 
-/* Board wrapper */
-#board-wrap{position:relative}
-#arrow-canvas{position:absolute;top:0;left:0;pointer-events:none;z-index:10}
+.white-1e1d7 { background-color: #f0d9b5 !important; }
+.black-3c85d { background-color: #b58863 !important; }
+.highlight-rc { background-color: rgba(220,60,60,0.55) !important; }
+.highlight-premove { background-color: rgba(100,180,255,0.4) !important; }
+.highlight-hint { box-shadow: inset 0 0 0 4px rgba(100,200,100,0.9) !important; }
 
-/* Chessboard colors */
-.white-1e1d7{background-color:var(--light-sq) !important}
-.black-3c85d{background-color:var(--dark-sq) !important}
+.sidebar { width: 250px; display: flex; flex-direction: column; gap: 14px; padding-top: 4px; }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.panel-head { padding: 10px 14px; border-bottom: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.panel-body { padding: 14px; }
+.cat-img-wrap img { width: 100%; display: block; filter: saturate(0.9); }
 
-/* Square highlights */
-.sq-selected{background-color:rgba(255,255,255,0.18) !important;box-shadow:inset 0 0 0 3px rgba(255,255,255,0.5) !important}
-.sq-movehint::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:30%;height:30%;border-radius:50%;background:rgba(180,30,30,0.7);pointer-events:none;z-index:5}
-.sq-movehint-cap::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;border-radius:50%;border:4px solid rgba(180,30,30,0.65);pointer-events:none;z-index:5}
-.sq-lastmove{background-color:rgba(200,164,90,0.3) !important}
-.sq-lastmove-to{background-color:rgba(200,164,90,0.48) !important}
-.sq-rc-highlight{background-color:rgba(200,50,50,0.5) !important}
-.sq-premove{background-color:rgba(100,180,255,0.38) !important}
-.sq-hint-move{box-shadow:inset 0 0 0 4px rgba(100,200,100,0.9) !important}
+.eval-row { display: flex; align-items: center; gap: 10px; }
+.eval-bar { flex: 1; height: 5px; background: #1a1a18; border-radius: 3px; overflow: hidden; border: 1px solid var(--border); }
+.eval-fill { height: 100%; background: #f0d9b5; border-radius: 3px; transition: width 0.6s ease; width: 50%; }
+.eval-num { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted); min-width: 36px; text-align: right; }
 
-/* Game sidebar */
-.game-side{width:240px;display:flex;flex-direction:column;gap:10px}
-.action-row{display:flex;gap:8px}
-.action-btn{flex:1;padding:9px 4px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:.62rem;letter-spacing:.04em;cursor:pointer;transition:all .15s;white-space:nowrap}
-.action-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
-.action-btn:disabled{opacity:.25;cursor:not-allowed}
-.hint-btn:hover:not(:disabled){border-color:#7ec8a0;color:#7ec8a0}
-.resign-btn:hover:not(:disabled){border-color:var(--red);color:var(--red)}
-.new-btn{width:100%;padding:10px;background:var(--accent);color:#111210;border:none;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;font-weight:500;transition:background .15s}
-.new-btn:hover{background:#d4b06a}
-.eval-row{display:flex;align-items:center;gap:8px}
-.eval-bar{flex:1;height:4px;background:#1a1a18;border-radius:3px;overflow:hidden;border:1px solid var(--border)}
-.eval-fill{height:100%;background:var(--light-sq);border-radius:3px;transition:width .6s ease;width:50%}
-.eval-num{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--muted);min-width:32px;text-align:right}
-.move-list{max-height:200px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:.65rem}
-.move-list::-webkit-scrollbar{width:3px}
-.move-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-.move-row{display:grid;grid-template-columns:22px 1fr 1fr;gap:4px;padding:2px 0;border-bottom:1px solid rgba(255,255,255,.03)}
-.mn{color:var(--border)}.mw{color:var(--text)}.mb{color:var(--muted)}
-.move-row.latest .mw,.move-row.latest .mb{color:var(--accent)}
-.empty-moves{color:var(--border);font-size:.6rem;padding:6px 0}
+.diff-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.diff-btn { padding: 7px 4px; border: 1px solid var(--border); background: transparent; color: var(--muted); border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.04em; cursor: pointer; transition: all 0.15s; text-align: center; }
+.diff-btn:hover { border-color: var(--accent); color: var(--text); }
+.diff-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.diff-sub { display: block; font-size: 0.54rem; margin-top: 2px; opacity: 0.55; font-family: 'Inter', sans-serif; }
 
-/* ── OVERLAY ── */
-.overlay{display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.85);align-items:center;justify-content:center;backdrop-filter:blur(6px)}
-.overlay.show{display:flex}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:36px 44px;text-align:center;max-width:300px;width:90%}
-.modal-glyph{font-size:2.6rem;margin-bottom:12px}
-.modal h2{font-family:'Playfair Display',serif;font-size:1.7rem;color:var(--accent);margin-bottom:8px}
-.modal p{color:var(--muted);font-size:.82rem;line-height:1.6;margin-bottom:22px}
+.color-row { display: flex; gap: 8px; }
+.color-btn { flex: 1; padding: 9px 6px; border: 1px solid var(--border); background: transparent; border-radius: 4px; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; letter-spacing: 0.04em; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 5px; color: var(--muted); }
+.color-btn.w-btn { color: #d4c9a8; }
+.color-btn.w-btn.active { border-color: #d4c9a8; background: rgba(212,201,168,0.08); color: #e8dfc8; }
+.color-btn.b-btn.active { border-color: var(--text); color: var(--text); background: rgba(255,255,255,0.04); }
 
-/* Promo */
-.promo-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.88);align-items:center;justify-content:center}
-.promo-overlay.show{display:flex}
-.promo-box{background:var(--surface);border:1px solid var(--accent);border-radius:8px;padding:20px 24px;text-align:center}
-.promo-box h3{font-family:'Playfair Display',serif;color:var(--accent);margin-bottom:14px}
-.promo-row{display:flex;gap:8px}
-.promo-sq{width:64px;height:64px;border:1px solid var(--border);border-radius:4px;cursor:pointer;background:var(--surface2);display:flex;align-items:center;justify-content:center;transition:all .15s}
-.promo-sq:hover{border-color:var(--accent);background:var(--accent-dim)}
-.promo-sq img{width:52px;height:52px}
+.new-btn { width: 100%; padding: 11px; background: var(--accent); color: #111210; border: none; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: background 0.15s; font-weight: 500; }
+.new-btn:hover { background: #d4b06a; }
 
-/* ── RESPONSIVE ── */
-@media(max-width:820px){
-  .game-wrap{flex-direction:column;align-items:center;padding:8px;gap:12px}
-  .game-side{width:100%;max-width:480px}
-  header{padding:10px 16px}
+.action-row { display: flex; gap: 8px; }
+.action-btn { flex: 1; padding: 9px 6px; background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.04em; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.action-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.action-btn:disabled { opacity: 0.28; cursor: not-allowed; }
+.hint-btn:hover:not(:disabled) { border-color: #7ec8a0; color: #7ec8a0; }
+.resign-btn:hover:not(:disabled) { border-color: var(--red); color: var(--red); }
+
+.move-list { max-height: 160px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; }
+.move-list::-webkit-scrollbar { width: 3px; }
+.move-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.move-row { display: grid; grid-template-columns: 24px 1fr 1fr; gap: 4px; padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.mn { color: var(--border); } .mw { color: var(--text); } .mb { color: var(--muted); }
+.move-row.latest .mw, .move-row.latest .mb { color: var(--accent); }
+.empty-moves { color: var(--border); font-size: 0.6rem; padding: 6px 0; }
+
+.eng-row { display: flex; align-items: center; gap: 7px; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--muted); }
+.eng-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--muted); transition: background 0.3s; flex-shrink: 0; }
+.eng-dot.ready { background: var(--green); }
+.eng-dot.busy  { background: var(--accent); animation: blink 0.7s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+.overlay { display: none; position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.82); align-items: center; justify-content: center; backdrop-filter: blur(6px); }
+.overlay.show { display: flex; }
+.modal { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 36px 44px; text-align: center; max-width: 300px; }
+.modal-glyph { font-size: 2.6rem; margin-bottom: 12px; }
+.modal h2 { font-family: 'Playfair Display', serif; font-size: 1.7rem; color: var(--accent); margin-bottom: 8px; }
+.modal p { color: var(--muted); font-size: 0.82rem; line-height: 1.6; margin-bottom: 22px; }
+
+.promo-overlay { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; }
+.promo-overlay.show { display: flex; }
+.promo-box { background: var(--surface); border: 1px solid var(--accent); border-radius: 8px; padding: 20px 24px; text-align: center; }
+.promo-box h3 { font-family: 'Playfair Display', serif; color: var(--accent); margin-bottom: 14px; }
+.promo-row { display: flex; gap: 8px; }
+.promo-sq { width: 64px; height: 64px; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; background: var(--surface2); display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.promo-sq:hover { border-color: var(--accent); background: var(--accent-dim); }
+.promo-sq img { width: 52px; height: 52px; }
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  main { flex-direction: column; align-items: center; padding: 12px; gap: 16px; }
+  #board-wrap { width: calc(100vw - 24px) !important; }
+  #board { width: calc(100vw - 24px) !important; }
+  #arrow-canvas { width: calc(100vw - 24px) !important; height: calc(100vw - 24px) !important; }
+  .sidebar { width: calc(100vw - 24px); }
+  .player-row { width: calc(100vw - 24px); }
 }
 </style>
 </head>
 <body>
-
 <header>
   <div class="logo">BLUERICA <em>chess</em></div>
   <div class="status-badge" id="status-badge">loading…</div>
 </header>
-
-<!-- ══ SETUP PAGE ══ -->
-<div class="page active" id="page-setup">
-  <div class="setup-wrap">
-    <div class="eng-row" style="align-self:flex-start">
-      <div class="eng-dot" id="eng-dot"></div>
-      <span id="eng-label">Loading engine…</span>
+<main>
+  <div class="board-area">
+    <div class="player-row">
+      <span class="player-name" id="top-name"><span class="turn-dot"></span>BLUERICA</span>
     </div>
-
-    <div class="cat-setup">
-      <img src="cat.jpg" alt="Bluerica">
+    <div id="board-wrap">
+      <div id="board" style="width:736px"></div>
+      <canvas id="arrow-canvas"></canvas>
     </div>
-
+    <div class="player-row">
+      <span class="player-name active" id="bot-name"><span class="turn-dot"></span>You</span>
+    </div>
+  </div>
+  <div class="sidebar">
+    <div class="eng-row"><div class="eng-dot" id="eng-dot"></div><span id="eng-label">Loading engine…</span></div>
+    <div class="panel"><div class="cat-img-wrap"><img src="cat.jpg" alt="Bluerica"></div></div>
+    <div class="panel">
+      <div class="panel-head">Position</div>
+      <div class="panel-body" style="padding:10px 14px;">
+        <div class="eval-row"><div class="eval-bar"><div class="eval-fill" id="eval-fill"></div></div><div class="eval-num" id="eval-num">0.0</div></div>
+      </div>
+    </div>
     <div class="panel">
       <div class="panel-head">Difficulty</div>
       <div class="panel-body">
         <div class="diff-grid">
           <button class="diff-btn active" data-skill="0"  data-depth="1" data-delay="1400">1<span class="diff-sub">Newbie</span></button>
-          <button class="diff-btn"        data-skill="1"  data-depth="1" data-delay="1100">2<span class="diff-sub">Beginner</span></button>
-          <button class="diff-btn"        data-skill="3"  data-depth="2" data-delay="900">3<span class="diff-sub">Easy</span></button>
-          <button class="diff-btn"        data-skill="5"  data-depth="3" data-delay="700">4<span class="diff-sub">Casual</span></button>
-          <button class="diff-btn"        data-skill="8"  data-depth="5" data-delay="600">5<span class="diff-sub">Medium</span></button>
-          <button class="diff-btn"        data-skill="11" data-depth="7" data-delay="500">6<span class="diff-sub">Club</span></button>
-          <button class="diff-btn"        data-skill="14" data-depth="10" data-delay="400">7<span class="diff-sub">Hard</span></button>
-          <button class="diff-btn"        data-skill="17" data-depth="13" data-delay="350">8<span class="diff-sub">Expert</span></button>
-          <button class="diff-btn"        data-skill="20" data-depth="18" data-delay="280">∞<span class="diff-sub">Max</span></button>
+          <button class="diff-btn" data-skill="1"  data-depth="1" data-delay="1100">2<span class="diff-sub">Beginner</span></button>
+          <button class="diff-btn" data-skill="3"  data-depth="2" data-delay="900">3<span class="diff-sub">Easy</span></button>
+          <button class="diff-btn" data-skill="5"  data-depth="3" data-delay="700">4<span class="diff-sub">Casual</span></button>
+          <button class="diff-btn" data-skill="8"  data-depth="5" data-delay="600">5<span class="diff-sub">Medium</span></button>
+          <button class="diff-btn" data-skill="11" data-depth="7" data-delay="500">6<span class="diff-sub">Club</span></button>
+          <button class="diff-btn" data-skill="14" data-depth="10" data-delay="400">7<span class="diff-sub">Hard</span></button>
+          <button class="diff-btn" data-skill="17" data-depth="13" data-delay="350">8<span class="diff-sub">Expert</span></button>
+          <button class="diff-btn" data-skill="20" data-depth="18" data-delay="280">∞<span class="diff-sub">Max</span></button>
         </div>
       </div>
     </div>
-
     <div class="panel">
       <div class="panel-head">Play as</div>
       <div class="panel-body">
         <div class="color-row">
-          <button class="color-btn w-btn active" id="setup-btn-w">⬜ White</button>
-          <button class="color-btn b-btn"        id="setup-btn-b">⬛ Black</button>
+          <button class="color-btn w-btn active" id="btn-w">⬜ White</button>
+          <button class="color-btn b-btn" id="btn-b">⬛ Black</button>
         </div>
       </div>
     </div>
-
-    <button class="start-btn" id="start-btn">Start Game</button>
+    <button class="new-btn" id="new-btn">New Game</button>
+    <div class="action-row">
+      <button class="action-btn" id="back-btn">◀ Back</button>
+      <button class="action-btn" id="fwd-btn">Forward ▶</button>
+    </div>
+    <div class="action-row">
+      <button class="action-btn hint-btn" id="hint-btn">💡 Hint</button>
+      <button class="action-btn resign-btn" id="resign-btn">🏳 Resign</button>
+    </div>
+    <div class="panel">
+      <div class="panel-head">Move history</div>
+      <div class="panel-body" style="padding:8px 14px;">
+        <div class="move-list" id="move-list"><div class="empty-moves">— no moves yet —</div></div>
+      </div>
+    </div>
   </div>
-</div>
+</main>
 
-<!-- ══ GAME PAGE ══ -->
-<div class="page" id="page-game">
-  <div class="game-wrap">
-
-    <div class="board-col">
-      <div class="player-bar">
-        <span class="player-name" id="top-name"><span class="turn-dot"></span>BLUERICA</span>
-      </div>
-      <div id="board-wrap">
-        <div id="board"></div>
-        <canvas id="arrow-canvas"></canvas>
-      </div>
-      <div class="player-bar">
-        <span class="player-name active" id="bot-name"><span class="turn-dot"></span>You</span>
-      </div>
-    </div>
-
-    <div class="game-side">
-      <div class="panel" style="padding:10px 14px">
-        <div class="eval-row">
-          <div class="eval-bar"><div class="eval-fill" id="eval-fill"></div></div>
-          <div class="eval-num" id="eval-num">0.0</div>
-        </div>
-      </div>
-
-      <button class="new-btn" id="back-setup-btn">← Back to Menu</button>
-
-      <div class="action-row">
-        <button class="action-btn" id="back-btn">◀ Back</button>
-        <button class="action-btn" id="fwd-btn">Forward ▶</button>
-      </div>
-      <div class="action-row">
-        <button class="action-btn hint-btn" id="hint-btn">💡 Hint</button>
-        <button class="action-btn resign-btn" id="resign-btn">🏳 Resign</button>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head">Move history</div>
-        <div class="panel-body" style="padding:8px 14px">
-          <div class="move-list" id="move-list"><div class="empty-moves">— no moves yet —</div></div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- Game Over -->
 <div class="overlay" id="overlay">
   <div class="modal">
     <div class="modal-glyph" id="modal-glyph">♟</div>
     <h2 id="modal-title">Game Over</h2>
     <p id="modal-msg"></p>
-    <button class="start-btn" id="modal-menu-btn" style="margin-bottom:10px">← Back to Menu</button>
-    <button class="new-btn" id="modal-new-btn">Play Again</button>
+    <button class="new-btn" id="modal-new-btn" style="max-width:180px;margin:0 auto;">Play Again</button>
   </div>
 </div>
-
-<!-- Promotion -->
 <div class="promo-overlay" id="promo-overlay">
   <div class="promo-box">
     <h3>Promote pawn</h3>
@@ -249,430 +219,381 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
 </div>
 
 <script>
-const $=id=>document.getElementById(id);
-const PIECES='https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/cburnett/';
+const $ = id => document.getElementById(id);
+const PIECE_PATH = 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/cburnett/';
 
-// ── State ─────────────────────────────────────────────────────────────────────
-let chess=new Chess(), board=null;
-let playerColor='w';
-let engineReady=false, engineBusy=false;
-let stockfish=null, resolveMove=null;
-let skillLevel=0, searchDepth=1, engineDelay=1400;
-let historySnap=[], viewIndex=-1;
-let selectedSq=null, legalTargets=[];
-let pendingPromoFrom=null, pendingPromoTo=null;
-let rcMouseFrom=null, rcDragging=false;
-let rcHighlights={}, arrows=[];
-let boardSize=560;
+let chess = new Chess();
+let board = null;
+let playerColor = 'w';
+let engineReady = false;
+let engineBusy  = false;
+let stockfish   = null;
+let resolveMove = null;
+let skillLevel  = 0;
+let searchDepth = 1;
+let engineDelay = 1400;
+let historySnap = [];
+let viewIndex   = -1;
+let premoveFrom = null;
+let premoveTo   = null;
+let rcHighlights = {};
+let arrows = [];
+let rcMouseFrom = null;
+let rcDragging  = false;
+let pendingPromoFrom = null;
+let pendingPromoTo   = null;
 
-// ── Sounds ────────────────────────────────────────────────────────────────────
-const sounds={};
-['Move','Capture','Select','GenericNotify'].forEach(n=>{
-  const a=new Audio(`sounds/${n}.mp3`); a.preload='auto'; sounds[n]=a;
+// Sounds
+const sounds = {};
+['Move','Capture','Select','GenericNotify'].forEach(name => {
+  const a = new Audio(`sounds/${name}.mp3`);
+  a.preload = 'auto';
+  sounds[name] = a;
 });
-function playSound(n){const s=sounds[n];if(!s)return;const c=s.cloneNode();c.volume=.7;c.play().catch(()=>{})}
-const AC=window.AudioContext||window.webkitAudioContext; let ac=null;
-function playCheck(){
-  if(!ac)ac=new AC(); if(ac.state==='suspended')ac.resume();
-  const t=ac.currentTime;
-  [0,.12,.24].forEach((off,i)=>{
-    const o=ac.createOscillator(),g=ac.createGain();
-    o.connect(g);g.connect(ac.destination);
-    o.type='sine';o.frequency.setValueAtTime(880-i*60,t+off);
-    g.gain.setValueAtTime(.15,t+off);g.gain.exponentialRampToValueAtTime(.001,t+off+.1);
-    o.start(t+off);o.stop(t+off+.1);
+function playSound(name) {
+  const s = sounds[name]; if (!s) return;
+  const c = s.cloneNode(); c.volume = 0.7; c.play().catch(()=>{});
+}
+const AC = window.AudioContext || window.webkitAudioContext;
+let ac = null;
+function playCheck() {
+  if (!ac) ac = new AC();
+  if (ac.state === 'suspended') ac.resume();
+  const t = ac.currentTime;
+  [0,0.12,0.24].forEach((off,i) => {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.connect(g); g.connect(ac.destination);
+    o.type = 'sine'; o.frequency.setValueAtTime(880-i*60, t+off);
+    g.gain.setValueAtTime(0.15,t+off); g.gain.exponentialRampToValueAtTime(0.001,t+off+0.1);
+    o.start(t+off); o.stop(t+off+0.1);
   });
 }
 
-// ── Engine ────────────────────────────────────────────────────────────────────
-function initEngine(){
-  try{
-    const blob=new Blob([`importScripts('https://cdn.jsdelivr.net/npm/stockfish.js@10.0.2/stockfish.js');`],{type:'application/javascript'});
-    stockfish=new Worker(URL.createObjectURL(blob));
-    stockfish.onmessage=e=>{
-      const msg=e.data;
-      if(msg==='uciok'){stockfish.postMessage('isready');return}
-      if(msg==='readyok'){
-        engineReady=true;
-        $('eng-dot').className='eng-dot ready';
-        $('eng-label').textContent='BLUERICA ready';
-        $('status-badge').textContent='ready'; $('status-badge').className='status-badge your-turn';
+// Engine
+function initEngine() {
+  try {
+    const code = `importScripts('https://cdn.jsdelivr.net/npm/stockfish.js@10.0.2/stockfish.js');`;
+    const blob = new Blob([code], {type:'application/javascript'});
+    stockfish = new Worker(URL.createObjectURL(blob));
+    stockfish.onmessage = e => {
+      const msg = e.data;
+      if (msg === 'uciok')   { stockfish.postMessage('isready'); return; }
+      if (msg === 'readyok') {
+        engineReady = true;
+        $('eng-dot').className = 'eng-dot ready';
+        $('eng-label').textContent = 'BLUERICA ready';
+        $('status-badge').textContent = 'your move';
+        $('status-badge').className = 'status-badge your-turn';
         return;
       }
-      if(msg&&msg.startsWith('bestmove')&&resolveMove){
-        const mv=msg.split(' ')[1],cb=resolveMove;resolveMove=null;cb(mv==='(none)'?null:mv);return;
+      if (msg && msg.startsWith('bestmove') && resolveMove) {
+        const mv = msg.split(' ')[1];
+        const cb = resolveMove; resolveMove = null;
+        cb(mv === '(none)' ? null : mv); return;
       }
-      if(msg&&msg.includes('score cp')){const m=msg.match(/score cp (-?\d+)/);if(m)updateEval(parseInt(m[1])/100)}
-      if(msg&&msg.includes('score mate')){const m=msg.match(/score mate (-?\d+)/);if(m)updateEval(parseInt(m[1])>0?99:-99)}
+      if (msg && msg.includes('score cp')) {
+        const m = msg.match(/score cp (-?\d+)/);
+        if (m) updateEval(parseInt(m[1])/100);
+      }
+      if (msg && msg.includes('score mate')) {
+        const m = msg.match(/score mate (-?\d+)/);
+        if (m) updateEval(parseInt(m[1])>0?99:-99);
+      }
     };
-    stockfish.onerror=()=>{$('eng-label').textContent='Engine error'};
+    stockfish.onerror = () => { $('eng-label').textContent = 'Engine error'; };
     stockfish.postMessage('uci');
-  }catch(e){$('eng-label').textContent='Engine unavailable'}
+  } catch(e) { $('eng-label').textContent = 'Engine unavailable'; }
 }
-function updateEval(cp){
-  const pct=Math.min(Math.max(50+cp*3.5,4),96);
-  $('eval-fill').style.width=pct+'%';
-  $('eval-num').textContent=cp>=99?'+M':cp<=-99?'-M':(cp>=0?'+':'')+cp.toFixed(1);
+function updateEval(cp) {
+  const pct = Math.min(Math.max(50+cp*3.5,4),96);
+  $('eval-fill').style.width = pct+'%';
+  $('eval-num').textContent = cp>=99?'+M':cp<=-99?'-M':(cp>=0?'+':'')+cp.toFixed(1);
 }
-async function getBestMove(fen){
-  return new Promise(resolve=>{
-    resolveMove=resolve;
+async function getBestMove(fen) {
+  return new Promise(resolve => {
+    resolveMove = resolve;
     stockfish.postMessage(`setoption name Skill Level value ${skillLevel}`);
     stockfish.postMessage(`position fen ${fen}`);
     stockfish.postMessage(`go depth ${searchDepth}`);
   });
 }
 
-// ── Board init ────────────────────────────────────────────────────────────────
-function calcBoardSize(){
-  if(window.innerWidth<=820) return Math.min(window.innerWidth-16, 480);
-  return Math.min(window.innerWidth-320, 640);
-}
+// Board
+function pieceTheme(piece) { return PIECE_PATH + piece + '.svg'; }
 
-function initBoard(){
-  boardSize=calcBoardSize();
-  $('board').style.width=boardSize+'px';
-
-  board=Chessboard('board',{
-    position:'start',
-    draggable:true,
-    orientation:playerColor==='w'?'white':'black',
-    pieceTheme:p=>PIECES+p+'.svg',
-    onDragStart:onDragStart,
-    onDrop:onDrop,
-    onSnapEnd:()=>board.position(chess.fen()),
-    onMouseoverSquare:onMouseover,
-    onMouseoutSquare:onMouseout,
+function initBoard() {
+  board = Chessboard('board', {
+    position: 'start',
+    draggable: true,
+    orientation: playerColor === 'w' ? 'white' : 'black',
+    pieceTheme: pieceTheme,
+    onDragStart:  onDragStart,
+    onDrop:       onDrop,
+    onSnapEnd:    onSnapEnd,
+    onMouseoverSquare: onMouseoverSquare,
+    onMouseoutSquare:  onMouseoutSquare,
   });
-
-  // Sync canvas
-  const canvas=$('arrow-canvas');
-  canvas.width=boardSize; canvas.height=boardSize;
-  canvas.style.width=boardSize+'px'; canvas.style.height=boardSize+'px';
-
+  setupArrowCanvas();
   setupRightClick();
 }
 
-// ── Square click (for click-to-move) ─────────────────────────────────────────
-function onMouseover(sq){
-  if(engineBusy||chess.turn()!==playerColor||viewIndex!==-1) return;
-  // Show legal move dots when hovering own piece
-  const p=chess.get(sq);
-  if(p&&p.color===playerColor){
-    const mvs=chess.moves({square:sq,verbose:true});
-    mvs.forEach(m=>markHint(m.to, !!chess.get(m.to)));
+function onDragStart(source, piece) {
+  clearHighlightsAndArrows();
+  if (chess.game_over()) return false;
+  if (engineBusy || chess.turn() !== playerColor) {
+    if (piece.search(playerColor === 'w' ? /^w/ : /^b/) !== -1) return true;
+    return false;
   }
-}
-function onMouseout(){clearHints()}
-
-// Click-to-move support via chessboard square click
-$(document).on('click','.square-55d63, [class*="square-"]',function(){
-  const sq=$(this).attr('data-square')||getSquareFromEl(this);
-  if(!sq) return;
-  handleSquareClick(sq);
-});
-
-function getSquareFromEl(el){
-  const cls=[...el.classList].find(c=>c.startsWith('square-') && c!=='square-55d63');
-  return cls?cls.replace('square-',''):null;
-}
-
-function handleSquareClick(sq){
-  if(viewIndex!==-1||chess.game_over()) return;
-  if(engineBusy||chess.turn()!==playerColor){
-    // Premove
-    if(selectedSq){
-      setPremove(selectedSq,sq); clearSelection(); return;
-    }
-    const p=chess.get(sq);
-    if(p&&p.color===playerColor){selectedSq=sq;markSelected(sq);return}
-    return;
-  }
-  clearArrowsHighlights();
-  if(selectedSq){
-    if(sq===selectedSq){clearSelection();return}
-    const isLegal=legalTargets.includes(sq);
-    if(isLegal){
-      const p=chess.get(selectedSq);
-      const toRank=sq[1];
-      if(p&&p.type==='p'&&((playerColor==='w'&&toRank==='8')||(playerColor==='b'&&toRank==='1'))){
-        pendingPromoFrom=selectedSq;pendingPromoTo=sq;clearSelection();showPromoDialog();return;
-      }
-      const mv=chess.move({from:selectedSq,to:sq,promotion:'q'});
-      clearSelection();
-      if(mv)afterPlayerMove(mv);
-      return;
-    }
-    const p=chess.get(sq);
-    if(p&&p.color===playerColor){
-      clearSelection();selectSquare(sq);return;
-    }
-    clearSelection();return;
-  }
-  const p=chess.get(sq);
-  if(p&&p.color===playerColor) selectSquare(sq);
-}
-
-function selectSquare(sq){
-  selectedSq=sq;
-  legalTargets=chess.moves({square:sq,verbose:true}).map(m=>m.to);
-  markSelected(sq);
-  legalTargets.forEach(t=>markHint(t,!!chess.get(t)));
-}
-
-function clearSelection(){
-  if(selectedSq) removeSelected(selectedSq);
-  clearHints();
-  selectedSq=null; legalTargets=[];
-}
-
-function markSelected(sq){
-  document.querySelectorAll(`[data-square="${sq}"]`).forEach(el=>el.classList.add('sq-selected'));
-}
-function removeSelected(sq){
-  document.querySelectorAll(`[data-square="${sq}"]`).forEach(el=>el.classList.remove('sq-selected'));
-}
-function markHint(sq,isCapture){
-  document.querySelectorAll(`[data-square="${sq}"]`).forEach(el=>el.classList.add(isCapture?'sq-movehint-cap':'sq-movehint'));
-}
-function clearHints(){
-  document.querySelectorAll('.sq-movehint,.sq-movehint-cap').forEach(el=>{
-    el.classList.remove('sq-movehint','sq-movehint-cap');
-  });
-}
-
-// ── Drag & drop ───────────────────────────────────────────────────────────────
-function onDragStart(source,piece){
-  clearArrowsHighlights();
-  if(chess.game_over()) return false;
-  const myRx=playerColor==='w'?/^w/:/^b/;
-  if(engineBusy||chess.turn()!==playerColor){
-    return piece.search(myRx)!==-1; // allow dragging for premove
-  }
-  if(piece.search(myRx)===-1) return false;
-  selectSquare(source);
+  if ((playerColor==='w' && piece.search(/^b/)!==-1) || (playerColor==='b' && piece.search(/^w/)!==-1)) return false;
   return true;
 }
 
-function onDrop(source,target,piece){
-  clearSelection();
-  if(source===target) return 'snapback';
-  if(engineBusy||chess.turn()!==playerColor){
-    const myRx=playerColor==='w'?/^w/:/^b/;
-    if(piece.search(myRx)!==-1){setPremove(source,target);return}
+function onDrop(source, target, piece) {
+  clearHighlightsAndArrows();
+  if (source === target) return 'snapback';
+  if (engineBusy || chess.turn() !== playerColor) {
+    const myPiece = playerColor==='w' ? /^w/ : /^b/;
+    if (piece.search(myPiece) !== -1) { setPremove(source, target); return; }
     return 'snapback';
   }
-  const p=chess.get(source);
-  if(p&&p.type==='p'){
-    const r=target[1];
-    if((playerColor==='w'&&r==='8')||(playerColor==='b'&&r==='1')){
-      pendingPromoFrom=source;pendingPromoTo=target;showPromoDialog();return 'snapback';
+  const p = chess.get(source);
+  if (p && p.type === 'p') {
+    const toRank = target[1];
+    if ((playerColor==='w'&&toRank==='8')||(playerColor==='b'&&toRank==='1')) {
+      pendingPromoFrom = source; pendingPromoTo = target;
+      showPromoDialog(); return 'snapback';
     }
   }
-  const mv=chess.move({from:source,to:target,promotion:'q'});
-  if(!mv) return 'snapback';
-  afterPlayerMove(mv);
+  const move = chess.move({ from: source, to: target, promotion: 'q' });
+  if (!move) return 'snapback';
+  afterPlayerMove(move);
 }
 
-// ── Move execution ────────────────────────────────────────────────────────────
-function afterPlayerMove(mv){
+function onSnapEnd() { board.position(chess.fen()); }
+
+function onMouseoverSquare(square) {
+  if (engineBusy || chess.turn() !== playerColor) return;
+  const moves = chess.moves({ square, verbose: true });
+  moves.forEach(m => {
+    document.querySelectorAll(`.square-${m.to}`).forEach(el => el.classList.add('highlight-hint'));
+  });
+}
+function onMouseoutSquare() {
+  document.querySelectorAll('.highlight-hint').forEach(el => el.classList.remove('highlight-hint'));
+}
+
+function afterPlayerMove(move) {
   board.position(chess.fen());
-  highlightLastMove(mv.from,mv.to);
-  playMoveSound(mv);
-  if(chess.in_check()) playCheck();
+  highlightLastMove(move.from, move.to);
+  playMoveSound(move);
+  if (chess.in_check()) playCheck();
   updateStatus(); updateMoveList();
-  if(chess.game_over()){playSound('GenericNotify');setTimeout(showGameOver,500);return}
+  if (chess.game_over()) { playSound('GenericNotify'); setTimeout(showGameOver, 500); return; }
   engineTurn();
 }
 
-async function engineTurn(){
-  if(!engineReady) return;
-  engineBusy=true;
-  $('status-badge').textContent='thinking…'; $('status-badge').className='status-badge thinking';
-  $('eng-dot').className='eng-dot busy';
-  const best=await getBestMove(chess.fen());
-  await new Promise(r=>setTimeout(r,engineDelay+Math.random()*300));
-  engineBusy=false; $('eng-dot').className='eng-dot ready';
-  if(!best) return;
-  const from=best.slice(0,2),to=best.slice(2,4);
-  const mv=chess.move({from,to,promotion:best[4]||'q'});
+async function engineTurn() {
+  if (!engineReady) return;
+  engineBusy = true;
+  $('status-badge').textContent = 'thinking…';
+  $('status-badge').className = 'status-badge thinking';
+  $('eng-dot').className = 'eng-dot busy';
+  const best = await getBestMove(chess.fen());
+  await new Promise(r => setTimeout(r, engineDelay + Math.random()*300));
+  engineBusy = false;
+  $('eng-dot').className = 'eng-dot ready';
+  if (!best) return;
+  const from = best.slice(0,2), to = best.slice(2,4);
+  const move = chess.move({ from, to, promotion: best[4]||'q' });
   board.position(chess.fen());
-  highlightLastMove(from,to);
-  playMoveSound(mv);
-  if(chess.in_check()) playCheck();
+  highlightLastMove(from, to);
+  playMoveSound(move);
+  if (chess.in_check()) playCheck();
   updateStatus(); updateMoveList();
-  if(chess.game_over()){playSound('GenericNotify');setTimeout(showGameOver,500);return}
-  // Execute premove
-  if(premoveFrom){
-    const pf=premoveFrom,pt=premoveTo; clearPremove();
-    setTimeout(()=>{
-      const m=chess.move({from:pf,to:pt,promotion:'q'});
-      if(m) afterPlayerMove(m); else updateStatus();
-    },80);
+  if (chess.game_over()) { playSound('GenericNotify'); setTimeout(showGameOver, 500); return; }
+  if (premoveFrom) {
+    const pf = premoveFrom, pt = premoveTo;
+    clearPremove();
+    setTimeout(() => {
+      const mv = chess.move({ from: pf, to: pt, promotion: 'q' });
+      if (mv) afterPlayerMove(mv); else updateStatus();
+    }, 100);
   }
 }
 
-function playMoveSound(mv){
-  if(!mv) return;
-  if(mv.flags&&(mv.flags.includes('c')||mv.flags.includes('e'))) playSound('Capture');
+function playMoveSound(move) {
+  if (!move) return;
+  if (move.flags && (move.flags.includes('c')||move.flags.includes('e'))) playSound('Capture');
   else playSound('Move');
 }
 
-// ── Premove ───────────────────────────────────────────────────────────────────
-let premoveFrom=null,premoveTo=null;
-function setPremove(from,to){
-  clearPremove(); premoveFrom=from; premoveTo=to;
-  document.querySelectorAll(`[data-square="${from}"],[data-square="${to}"]`).forEach(el=>el.classList.add('sq-premove'));
-  $('status-badge').textContent='premove set'; $('status-badge').className='status-badge thinking';
+function setPremove(from, to) {
+  clearPremove();
+  premoveFrom = from; premoveTo = to;
+  document.querySelectorAll(`.square-${from}, .square-${to}`).forEach(el => el.classList.add('highlight-premove'));
+  $('status-badge').textContent = 'thinking… · premove set';
+  $('status-badge').className = 'status-badge thinking';
 }
-function clearPremove(){
-  if(premoveFrom) document.querySelectorAll(`[data-square="${premoveFrom}"],[data-square="${premoveTo}"]`).forEach(el=>el.classList.remove('sq-premove'));
-  premoveFrom=null; premoveTo=null;
+function clearPremove() {
+  if (premoveFrom) document.querySelectorAll(`.square-${premoveFrom}, .square-${premoveTo}`).forEach(el => el.classList.remove('highlight-premove'));
+  premoveFrom = null; premoveTo = null;
 }
 
-// ── Right-click arrows ────────────────────────────────────────────────────────
-function setupRightClick(){
-  const wrap=$('board-wrap');
-  wrap.addEventListener('contextmenu',e=>e.preventDefault());
-  wrap.addEventListener('mousedown',e=>{
-    if(e.button!==2) return;
+// Right-click
+function setupRightClick() {
+  const wrap = $('board-wrap');
+  wrap.addEventListener('contextmenu', e => e.preventDefault());
+  wrap.addEventListener('mousedown', e => {
+    if (e.button !== 2) return;
     e.preventDefault();
-    rcMouseFrom=squareFromEvt(e); rcDragging=false;
+    const sq = squareFromEvent(e);
+    if (!sq) return;
+    rcMouseFrom = sq; rcDragging = false;
   });
-  document.addEventListener('mousemove',e=>{
-    if(!(e.buttons&2)||!rcMouseFrom) return;
-    const sq=squareFromEvt(e);
-    if(sq&&sq!==rcMouseFrom) rcDragging=true;
+  document.addEventListener('mousemove', e => {
+    if (!(e.buttons & 2) || !rcMouseFrom) return;
+    const sq = squareFromEvent(e);
+    if (sq && sq !== rcMouseFrom) rcDragging = true;
   });
-  document.addEventListener('mouseup',e=>{
-    if(e.button!==2||!rcMouseFrom) return;
+  document.addEventListener('mouseup', e => {
+    if (e.button !== 2 || !rcMouseFrom) return;
     e.preventDefault();
-    const sq=squareFromEvt(e);
-    if(rcDragging&&sq&&sq!==rcMouseFrom) toggleArrow(rcMouseFrom,sq);
-    else toggleRcHighlight(rcMouseFrom);
-    rcMouseFrom=null; rcDragging=false;
+    const sq = squareFromEvent(e);
+    if (rcDragging && sq && sq !== rcMouseFrom) toggleArrow(rcMouseFrom, sq);
+    else toggleHighlight(rcMouseFrom);
+    rcMouseFrom = null; rcDragging = false;
   });
 }
 
-function squareFromEvt(e){
-  const rect=$('board').getBoundingClientRect();
-  const x=e.clientX-rect.left, y=e.clientY-rect.top;
-  const sz=rect.width/8;
-  const col=Math.floor(x/sz), row=Math.floor(y/sz);
-  if(col<0||col>7||row<0||row>7) return null;
-  const flip=playerColor==='b';
-  return 'abcdefgh'[flip?7-col:col]+(flip?row+1:8-row);
+function squareFromEvent(e) {
+  const boardEl = $('board');
+  const rect = boardEl.getBoundingClientRect();
+  const x = e.clientX - rect.left, y = e.clientY - rect.top;
+  const sz = rect.width / 8;
+  const col = Math.floor(x/sz), row = Math.floor(y/sz);
+  if (col<0||col>7||row<0||row>7) return null;
+  const flip = playerColor === 'b';
+  const file = flip ? 7-col : col;
+  const rank = flip ? row : 7-row;
+  return 'abcdefgh'[file] + (rank+1);
 }
 
-function toggleRcHighlight(sq){
-  if(!sq) return;
-  if(rcHighlights[sq]){
+function toggleHighlight(sq) {
+  if (rcHighlights[sq]) {
     delete rcHighlights[sq];
-    document.querySelectorAll(`[data-square="${sq}"]`).forEach(el=>el.classList.remove('sq-rc-highlight'));
+    document.querySelectorAll(`.square-${sq}`).forEach(el => el.classList.remove('highlight-rc'));
   } else {
-    rcHighlights[sq]=true;
-    document.querySelectorAll(`[data-square="${sq}"]`).forEach(el=>el.classList.add('sq-rc-highlight'));
+    rcHighlights[sq] = true;
+    document.querySelectorAll(`.square-${sq}`).forEach(el => el.classList.add('highlight-rc'));
   }
 }
-
-function toggleArrow(from,to){
-  const idx=arrows.findIndex(a=>a.from===from&&a.to===to);
-  if(idx!==-1) arrows.splice(idx,1); else arrows.push({from,to});
+function toggleArrow(from, to) {
+  const idx = arrows.findIndex(a => a.from===from && a.to===to);
+  if (idx !== -1) arrows.splice(idx, 1); else arrows.push({from, to});
   drawArrows();
 }
-
-function clearArrowsHighlights(){
-  Object.keys(rcHighlights).forEach(sq=>
-    document.querySelectorAll(`[data-square="${sq}"]`).forEach(el=>el.classList.remove('sq-rc-highlight'))
-  );
-  rcHighlights={}; arrows=[]; drawArrows();
+function clearHighlightsAndArrows() {
+  Object.keys(rcHighlights).forEach(sq => document.querySelectorAll(`.square-${sq}`).forEach(el => el.classList.remove('highlight-rc')));
+  rcHighlights = {}; arrows = []; drawArrows();
 }
 
-function sqCenter(sq){
-  const rect=$('board').getBoundingClientRect();
-  const sz=rect.width/8;
-  const flip=playerColor==='b';
-  const col='abcdefgh'.indexOf(sq[0]);
-  const row=parseInt(sq[1])-1;
-  const c=flip?7-col:col, r=flip?row:7-row;
-  return{x:c*sz+sz/2, y:(7-r)*sz+sz/2};
+function setupArrowCanvas() {
+  const canvas = $('arrow-canvas');
+  const boardEl = $('board');
+  const sz = boardEl.offsetWidth;
+  canvas.width = sz; canvas.height = sz;
+  canvas.style.width = sz+'px'; canvas.style.height = sz+'px';
 }
 
-function drawArrows(){
-  const canvas=$('arrow-canvas');
-  const ctx=canvas.getContext('2d');
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  const sz=$('board').offsetWidth/8;
-  arrows.forEach(({from,to})=>{
-    const fc=sqCenter(from),tc=sqCenter(to);
-    const dx=tc.x-fc.x,dy=tc.y-fc.y,len=Math.sqrt(dx*dx+dy*dy);
-    const ux=dx/len,uy=dy/len,hl=sz*.4,lw=sz*.13;
+function sqCenterPx(sqName) {
+  const boardEl = $('board');
+  const sz = boardEl.offsetWidth / 8;
+  const flip = playerColor === 'b';
+  const col = 'abcdefgh'.indexOf(sqName[0]);
+  const row = parseInt(sqName[1]) - 1;
+  const c = flip ? 7-col : col;
+  const r = flip ? row : 7-row;
+  return { x: c*sz + sz/2, y: (7-r)*sz + sz/2 };
+}
+
+function drawArrows() {
+  const canvas = $('arrow-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const sqSz = $('board').offsetWidth / 8;
+  arrows.forEach(({ from, to }) => {
+    const fc = sqCenterPx(from), tc = sqCenterPx(to);
+    const dx = tc.x-fc.x, dy = tc.y-fc.y;
+    const len = Math.sqrt(dx*dx+dy*dy);
+    const ux = dx/len, uy = dy/len;
+    const headLen = sqSz*0.38;
     ctx.save();
-    ctx.strokeStyle='rgba(200,50,50,.85)'; ctx.fillStyle='rgba(200,50,50,.85)';
-    ctx.lineWidth=lw; ctx.lineCap='round';
-    ctx.beginPath(); ctx.moveTo(fc.x,fc.y); ctx.lineTo(tc.x-ux*hl*.7,tc.y-uy*hl*.7); ctx.stroke();
-    const a=Math.atan2(dy,dx),sp=.42;
+    ctx.strokeStyle = 'rgba(210,50,50,0.82)';
+    ctx.fillStyle = 'rgba(210,50,50,0.82)';
+    ctx.lineWidth = sqSz*0.14; ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.moveTo(tc.x,tc.y);
-    ctx.lineTo(tc.x-hl*Math.cos(a-sp),tc.y-hl*Math.sin(a-sp));
-    ctx.lineTo(tc.x-hl*Math.cos(a+sp),tc.y-hl*Math.sin(a+sp));
+    ctx.moveTo(fc.x, fc.y);
+    ctx.lineTo(tc.x - ux*headLen*0.7, tc.y - uy*headLen*0.7);
+    ctx.stroke();
+    const angle = Math.atan2(dy, dx), spread = 0.45;
+    ctx.beginPath();
+    ctx.moveTo(tc.x, tc.y);
+    ctx.lineTo(tc.x - headLen*Math.cos(angle-spread), tc.y - headLen*Math.sin(angle-spread));
+    ctx.lineTo(tc.x - headLen*Math.cos(angle+spread), tc.y - headLen*Math.sin(angle+spread));
     ctx.closePath(); ctx.fill(); ctx.restore();
   });
 }
 
-// ── Last move highlight ───────────────────────────────────────────────────────
-function highlightLastMove(from,to){
-  document.querySelectorAll('.sq-lastmove,.sq-lastmove-to').forEach(el=>{el.classList.remove('sq-lastmove','sq-lastmove-to')});
-  document.querySelectorAll(`[data-square="${from}"]`).forEach(el=>el.classList.add('sq-lastmove'));
-  document.querySelectorAll(`[data-square="${to}"]`).forEach(el=>el.classList.add('sq-lastmove-to'));
+function highlightLastMove(from, to) {
+  document.querySelectorAll('[style*="box-shadow"]').forEach(el => el.style.boxShadow = '');
+  document.querySelectorAll(`.square-${from}`).forEach(el => el.style.boxShadow = 'inset 0 0 0 99px rgba(200,164,90,0.22)');
+  document.querySelectorAll(`.square-${to}`).forEach(el => el.style.boxShadow = 'inset 0 0 0 99px rgba(200,164,90,0.4)');
 }
 
-// ── Status ────────────────────────────────────────────────────────────────────
-function updateStatus(){
-  if(chess.game_over()) return;
-  if(chess.in_check()){$('status-badge').textContent='check!';$('status-badge').className='status-badge check'}
-  else if(chess.turn()===playerColor){$('status-badge').textContent='your move';$('status-badge').className='status-badge your-turn'}
-  const t=chess.turn(),topEng=playerColor==='w';
-  $('top-name').className='player-name'+((topEng?t==='b':t==='w')?' active':'');
-  $('bot-name').className='player-name'+((!topEng?t==='b':t==='w')?' active':'');
+function updateStatus() {
+  if (chess.game_over()) return;
+  if (chess.in_check()) { $('status-badge').textContent = 'check!'; $('status-badge').className = 'status-badge check'; }
+  else if (chess.turn() === playerColor) { $('status-badge').textContent = 'your move'; $('status-badge').className = 'status-badge your-turn'; }
+  const turn = chess.turn();
+  const topIsEngine = playerColor === 'w';
+  $('top-name').className = 'player-name' + ((topIsEngine ? turn==='b' : turn==='w') ? ' active' : '');
+  $('bot-name').className = 'player-name' + ((topIsEngine ? turn==='w' : turn==='b') ? ' active' : '');
 }
 
-function updateMoveList(){
-  const h=chess.history();
-  if(!h.length){$('move-list').innerHTML='<div class="empty-moves">— no moves yet —</div>';return}
-  let html='';
-  for(let i=0;i<h.length;i+=2){
-    const n=Math.floor(i/2)+1;
-    html+=`<div class="move-row${i>=h.length-2?' latest':''}"><span class="mn">${n}.</span><span class="mw">${h[i]||''}</span><span class="mb">${h[i+1]||''}</span></div>`;
+function updateMoveList() {
+  const history = chess.history();
+  if (!history.length) { $('move-list').innerHTML = '<div class="empty-moves">— no moves yet —</div>'; return; }
+  let html = '';
+  for (let i = 0; i < history.length; i += 2) {
+    const num = Math.floor(i/2)+1, w = history[i]||'', b = history[i+1]||'';
+    html += `<div class="move-row${i>=history.length-2?' latest':''}"><span class="mn">${num}.</span><span class="mw">${w}</span><span class="mb">${b}</span></div>`;
   }
-  const ml=$('move-list'); ml.innerHTML=html; ml.scrollTop=ml.scrollHeight;
+  const ml = $('move-list'); ml.innerHTML = html; ml.scrollTop = ml.scrollHeight;
 }
 
-// ── Game Over ─────────────────────────────────────────────────────────────────
-function showGameOver(){
-  const won=chess.in_checkmate()&&chess.turn()!==playerColor;
-  let icon,title,msg;
-  if(chess.in_checkmate()){icon=won?'🏆':'😿';title=won?'You win!':'Checkmate';msg=won?'You checkmated BLUERICA! 😺':'BLUERICA wins. 😼'}
-  else if(chess.in_stalemate()){icon='🤝';title='Stalemate';msg='Draw!'}
-  else{icon='½';title='Draw';msg='The game ended in a draw.'}
-  $('modal-glyph').textContent=icon; $('modal-title').textContent=title; $('modal-msg').textContent=msg;
+function showGameOver() {
+  const won = chess.in_checkmate() && chess.turn() !== playerColor;
+  let icon, title, msg;
+  if (chess.in_checkmate()) { icon = won?'🏆':'😿'; title = won?'You win!':'Checkmate'; msg = won?'You checkmated BLUERICA! 😺':'BLUERICA wins this round. 😼'; }
+  else if (chess.in_stalemate()) { icon='🤝'; title='Stalemate'; msg='No legal moves. Draw!'; }
+  else { icon='½'; title='Draw'; msg='The game ended in a draw.'; }
+  $('modal-glyph').textContent = icon; $('modal-title').textContent = title; $('modal-msg').textContent = msg;
   $('overlay').classList.add('show');
-  $('status-badge').textContent=title.toLowerCase(); $('status-badge').className='status-badge';
+  $('status-badge').textContent = title.toLowerCase(); $('status-badge').className = 'status-badge';
 }
 
-// ── Promotion ─────────────────────────────────────────────────────────────────
-function showPromoDialog(){
-  const c=playerColor,row=$('promo-row');
-  row.innerHTML='';
-  ['Q','R','B','N'].forEach(t=>{
-    const sq=document.createElement('div'); sq.className='promo-sq';
-    sq.innerHTML=`<img src="${PIECES+c+t+'.svg'}" alt="${t}">`;
-    sq.addEventListener('click',()=>{
+function showPromoDialog() {
+  const color = playerColor==='w'?'w':'b', types=['Q','R','B','N'];
+  const row = $('promo-row'); row.innerHTML = '';
+  types.forEach(t => {
+    const sq = document.createElement('div'); sq.className = 'promo-sq';
+    sq.innerHTML = `<img src="${pieceTheme(color+t)}" alt="${t}">`;
+    sq.addEventListener('click', () => {
       $('promo-overlay').classList.remove('show');
-      if(pendingPromoFrom){
-        const mv=chess.move({from:pendingPromoFrom,to:pendingPromoTo,promotion:t.toLowerCase()});
-        pendingPromoFrom=null; pendingPromoTo=null;
-        if(mv) afterPlayerMove(mv);
+      if (pendingPromoFrom) {
+        const mv = chess.move({ from: pendingPromoFrom, to: pendingPromoTo, promotion: t.toLowerCase() });
+        pendingPromoFrom = null; pendingPromoTo = null;
+        if (mv) afterPlayerMove(mv);
       }
     });
     row.appendChild(sq);
@@ -680,91 +601,68 @@ function showPromoDialog(){
   $('promo-overlay').classList.add('show');
 }
 
-// ── Navigation ────────────────────────────────────────────────────────────────
-function backMove(){
-  if(viewIndex===-1){historySnap=chess.history({verbose:true});viewIndex=historySnap.length}
-  if(viewIndex<=0) return;
+// Navigation
+function backMove() {
+  if (viewIndex===-1) { historySnap = chess.history({verbose:true}); viewIndex = historySnap.length; }
+  if (viewIndex<=0) return;
   viewIndex--;
   showPosition(viewIndex); playSound('Select');
 }
-function forwardMove(){
-  if(viewIndex===-1||viewIndex>=historySnap.length) return;
+function forwardMove() {
+  if (viewIndex===-1||viewIndex>=historySnap.length) return;
   viewIndex++;
   showPosition(viewIndex); playSound('Select');
-  if(viewIndex===historySnap.length) viewIndex=-1;
+  if (viewIndex===historySnap.length) viewIndex = -1;
 }
-function showPosition(idx){
-  const tmp=new Chess();
-  for(let i=0;i<idx;i++){const m=historySnap[i];tmp.move({from:m.from,to:m.to,promotion:m.promotion})}
-  board.position(tmp.fen(),false);
-  document.querySelectorAll('.sq-lastmove,.sq-lastmove-to').forEach(el=>el.classList.remove('sq-lastmove','sq-lastmove-to'));
-  if(idx>0) highlightLastMove(historySnap[idx-1].from,historySnap[idx-1].to);
-  if(viewIndex!==-1){$('status-badge').textContent=`move ${idx}/${historySnap.length}`;$('status-badge').className='status-badge thinking'}
+function showPosition(idx) {
+  const temp = new Chess();
+  for (let i=0;i<idx;i++) { const m=historySnap[i]; temp.move({from:m.from,to:m.to,promotion:m.promotion}); }
+  board.position(temp.fen(), false);
+  document.querySelectorAll('[style*="box-shadow"]').forEach(el => el.style.boxShadow='');
+  if (idx>0) highlightLastMove(historySnap[idx-1].from, historySnap[idx-1].to);
+  if (viewIndex!==-1) { $('status-badge').textContent=`move ${idx}/${historySnap.length}`; $('status-badge').className='status-badge thinking'; }
 }
 
-async function showHint(){
-  if(!engineReady||engineBusy||viewIndex!==-1||chess.turn()!==playerColor) return;
+async function showHint() {
+  if (!engineReady||engineBusy||viewIndex!==-1||chess.turn()!==playerColor) return;
   $('hint-btn').disabled=true; $('hint-btn').textContent='⏳';
-  const best=await getBestMove(chess.fen());
+  const best = await getBestMove(chess.fen());
   $('hint-btn').disabled=false; $('hint-btn').textContent='💡 Hint';
-  if(!best) return;
-  const from=best.slice(0,2),to=best.slice(2,4);
-  document.querySelectorAll(`[data-square="${from}"],[data-square="${to}"]`).forEach(el=>el.classList.add('sq-hint-move'));
-  setTimeout(()=>document.querySelectorAll('.sq-hint-move').forEach(el=>el.classList.remove('sq-hint-move')),2000);
+  if (!best) return;
+  const from=best.slice(0,2), to=best.slice(2,4);
+  document.querySelectorAll(`.square-${from},.square-${to}`).forEach(el=>el.classList.add('highlight-hint'));
+  setTimeout(()=>document.querySelectorAll(`.square-${from},.square-${to}`).forEach(el=>el.classList.remove('highlight-hint')),2000);
 }
 
-function resign(){
-  if(chess.game_over()) return;
-  if(!confirm('Resign this game?')) return;
+function resign() {
+  if (chess.game_over()) return;
+  if (!confirm('Resign this game?')) return;
   playSound('GenericNotify');
   $('modal-glyph').textContent='🏳'; $('modal-title').textContent='You resigned'; $('modal-msg').textContent='BLUERICA wins. 😼';
   $('overlay').classList.add('show');
+  $('status-badge').textContent='resigned'; $('status-badge').className='status-badge';
 }
 
-// ── Page navigation ───────────────────────────────────────────────────────────
-function showSetup(){
-  $('page-game').classList.remove('active');
-  $('page-setup').classList.add('active');
+function newGame() {
+  chess = new Chess(); historySnap=[]; viewIndex=-1;
+  clearPremove(); clearHighlightsAndArrows();
+  document.querySelectorAll('[style*="box-shadow"]').forEach(el=>el.style.boxShadow='');
+  engineBusy = false;
+  board.orientation(playerColor==='w'?'white':'black');
+  board.start();
   $('overlay').classList.remove('show');
-  $('status-badge').textContent='ready';
-  $('status-badge').className='status-badge your-turn';
-  if(engineBusy&&stockfish){stockfish.postMessage('stop');engineBusy=false}
+  updateEval(0); updateMoveList(); updateStatus();
+  $('top-name').innerHTML = `<span class="turn-dot"></span>${playerColor==='w'?'BLUERICA':'You'}`;
+  $('bot-name').innerHTML = `<span class="turn-dot"></span>${playerColor==='w'?'You':'BLUERICA'}`;
+  if (playerColor==='b') engineTurn();
 }
 
-function startGame(){
-  $('page-setup').classList.remove('active');
-  $('page-game').classList.add('active');
-  chess=new Chess(); historySnap=[]; viewIndex=-1;
-  clearPremove(); clearArrowsHighlights(); clearSelection();
-
-  if(!board){
-    initBoard();
-  } else {
-    boardSize=calcBoardSize();
-    $('board').style.width=boardSize+'px';
-    board.orientation(playerColor==='w'?'white':'black');
-    board.resize();
-    board.start();
-    const canvas=$('arrow-canvas');
-    canvas.width=boardSize; canvas.height=boardSize;
-    canvas.style.width=boardSize+'px'; canvas.style.height=boardSize+'px';
-  }
-
-  updateEval(0); updateMoveList();
-  $('top-name').innerHTML=`<span class="turn-dot"></span>${playerColor==='w'?'BLUERICA':'You'}`;
-  $('bot-name').innerHTML=`<span class="turn-dot"></span>${playerColor==='w'?'You':'BLUERICA'}`;
-  $('status-badge').textContent='your move'; $('status-badge').className='status-badge your-turn';
-  updateStatus();
-  if(playerColor==='b') engineTurn();
-}
-
-// ── Controls ──────────────────────────────────────────────────────────────────
-// Restore saved difficulty
-(function(){
-  const saved=localStorage.getItem('bluerica-level');
-  if(saved){
-    const btn=document.querySelector(`.diff-btn[data-skill="${saved}"]`);
-    if(btn){
+// Restore difficulty
+(function() {
+  const saved = localStorage.getItem('bluerica-level');
+  if (saved) {
+    const btn = document.querySelector(`.diff-btn[data-skill="${saved}"]`);
+    if (btn) {
       document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       skillLevel=parseInt(btn.dataset.skill); searchDepth=parseInt(btn.dataset.depth); engineDelay=parseInt(btn.dataset.delay)||1400;
@@ -772,35 +670,29 @@ function startGame(){
   }
 })();
 
-document.querySelectorAll('.diff-btn').forEach(btn=>{
-  btn.addEventListener('click',()=>{
+document.querySelectorAll('.diff-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
     document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     skillLevel=parseInt(btn.dataset.skill); searchDepth=parseInt(btn.dataset.depth); engineDelay=parseInt(btn.dataset.delay)||300;
-    localStorage.setItem('bluerica-level',btn.dataset.skill);
+    localStorage.setItem('bluerica-level', btn.dataset.skill);
   });
 });
 
-$('setup-btn-w').addEventListener('click',()=>{
-  $('setup-btn-w').classList.add('active'); $('setup-btn-b').classList.remove('active'); playerColor='w';
-});
-$('setup-btn-b').addEventListener('click',()=>{
-  $('setup-btn-b').classList.add('active'); $('setup-btn-w').classList.remove('active'); playerColor='b';
-});
-$('start-btn').addEventListener('click', startGame);
-$('back-setup-btn').addEventListener('click', showSetup);
-$('modal-menu-btn').addEventListener('click', showSetup);
-$('modal-new-btn').addEventListener('click', startGame);
+$('btn-w').addEventListener('click', ()=>{ $('btn-w').classList.add('active'); $('btn-b').classList.remove('active'); playerColor='w'; newGame(); });
+$('btn-b').addEventListener('click', ()=>{ $('btn-b').classList.add('active'); $('btn-w').classList.remove('active'); playerColor='b'; newGame(); });
+$('new-btn').addEventListener('click', newGame);
+$('modal-new-btn').addEventListener('click', newGame);
 $('back-btn').addEventListener('click', backMove);
 $('fwd-btn').addEventListener('click', forwardMove);
 $('hint-btn').addEventListener('click', showHint);
 $('resign-btn').addEventListener('click', resign);
+$('board-wrap').addEventListener('mousedown', e => { if (e.button===0) clearHighlightsAndArrows(); });
 
-// Clear arrows on left click
-$('board-wrap').addEventListener('mousedown',e=>{if(e.button===0) clearArrowsHighlights()});
-
-// ── Boot ──────────────────────────────────────────────────────────────────────
+// Boot
+initBoard();
 initEngine();
+updateStatus();
 </script>
 </body>
 </html>
