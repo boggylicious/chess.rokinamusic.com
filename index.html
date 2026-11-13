@@ -15,7 +15,8 @@
   --text:#e8e2d6;--muted:#887e6d;--green:#5ea87a;--red:#c95f5f;
   --ls:#f0d9b5;--ds:#b58863;
 }
-html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:15px;font-weight:400;touch-action:manipulation}
+html{overflow-y:scroll;scrollbar-gutter:stable}
+body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:15px;font-weight:400;touch-action:manipulation;overflow-x:hidden}
 
 header{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:var(--surface);border-bottom:1px solid var(--border);position:relative;z-index:50}
 .logo{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--accent);letter-spacing:.02em;font-weight:700}
@@ -37,19 +38,19 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
 main{display:flex;flex-wrap:nowrap;justify-content:center;align-items:stretch;gap:18px;padding:16px 20px;max-width:1300px;margin:0 auto;width:100%}
 .side-col{display:flex;flex-direction:column;gap:8px;flex-shrink:0}
 .side-col.left-col{width:220px;order:1}
-.board-col{display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0;position:relative;order:2}
+.board-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;flex-shrink:0;position:relative;order:2;align-self:flex-start}
 .side-col.right-col{width:260px;order:3}
 
 /* Board */
 .pbar{display:flex;align-items:center;justify-content:space-between;width:100%;font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:500;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;gap:8px;padding:4px 6px}
 .pbar-user{display:flex;align-items:center;gap:8px}
 .pbar.active{color:var(--text)}
-.tdot{width:8px;height:8px;border-radius:50%;background:var(--green);display:none;flex-shrink:0}
-.pbar.active .tdot{display:block}
+.tdot{width:8px;height:8px;border-radius:50%;background:var(--green);opacity:0;visibility:hidden;flex-shrink:0;transition:opacity .15s}
+.pbar.active .tdot{opacity:1;visibility:visible}
 
 /* Digital Chess Clocks */
-.clock{display:none;font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:700;padding:3px 10px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);letter-spacing:.04em;transition:all .2s;min-width:68px;text-align:center}
-.pbar.active .clock{background:#262420;border-color:var(--accent);color:#fff;box-shadow:0 0 10px rgba(200,164,90,0.22)}
+.clock{display:none;font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:700;padding:3px 10px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);letter-spacing:.04em;transition:background-color .15s, border-color .15s, color .15s;min-width:68px;text-align:center}
+.pbar.active .clock{background:#262420;border-color:var(--accent);color:#fff}
 .clock.low{border-color:var(--red)!important;color:var(--red)!important;background:rgba(201,95,95,0.18)!important;animation:lowPulse 1s infinite alternate}
 @keyframes lowPulse{0%{box-shadow:0 0 4px rgba(201,95,95,0.2)}100%{box-shadow:0 0 14px rgba(201,95,95,0.6)}}
 
@@ -89,10 +90,16 @@ main{display:flex;flex-wrap:nowrap;justify-content:center;align-items:stretch;ga
 .sq img.dragging{opacity:0.2}
 
 /* Primary board action buttons directly under the board */
-.board-actions{display:flex;gap:7px;width:100%;margin-top:8px;flex-wrap:wrap}
-.board-actions .abtn{flex:1;min-width:65px;padding:10px 4px;text-align:center;font-size:.68rem}
-.nbtn-sm{padding:10px 14px;background:var(--accent);color:#111;border:none;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:.7rem;cursor:pointer;font-weight:600;letter-spacing:.04em;text-transform:uppercase;transition:background .15s;white-space:nowrap}
+.board-actions{display:flex;gap:7px;width:100%;margin-top:6px;flex-wrap:wrap}
+.board-actions .abtn{flex:1;min-width:62px;padding:9px 4px;text-align:center;font-size:.68rem}
+.nbtn-sm{padding:9px 12px;background:var(--accent);color:#111;border:none;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:.7rem;cursor:pointer;font-weight:600;letter-spacing:.04em;text-transform:uppercase;transition:background .15s;white-space:nowrap}
 .nbtn-sm:hover{background:#d4b06a}
+
+/* Mobile Segmented Tabs (Lichess Style) */
+.mobile-tabs{display:none;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px;gap:4px;margin-top:2px}
+.mtab{flex:1;padding:8px 4px;background:transparent;border:1px solid transparent;border-radius:4px;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:4px}
+.mtab:hover{color:var(--text)}
+.mtab.active{background:var(--surface2);color:var(--accent);border-color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,0.3)}
 
 /* Toast reactions */
 .toast-reaction{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.5);font-size:4rem;z-index:900;pointer-events:none;animation:popToast 1.2s ease forwards}
@@ -175,18 +182,43 @@ main{display:flex;flex-wrap:nowrap;justify-content:center;align-items:stretch;ga
 
 /* 🎯 FOCUS MODE: Ultra-Clean Board Centered */
 body.focus-mode header{background:transparent;border-bottom-color:transparent}
-body.focus-mode .side-col{display:none!important}
+body.focus-mode .side-col, body.focus-mode .mobile-tabs{display:none!important}
 body.focus-mode main{padding:8px;justify-content:center;align-items:center;min-height:calc(100vh - 75px)}
 body.focus-mode .board-col{max-width:100%}
 body.focus-mode .board-actions{max-width:640px}
 
-/* Responsive (Mobile, Tablet, Split-Window: Board is ALWAYS Top / Order 1) */
+/* Responsive (Mobile, Tablet: Clean Lichess Experience) */
 @media(max-width:980px){
-  main{flex-direction:column;align-items:center;padding:10px 8px;gap:14px;flex-wrap:wrap}
-  .board-col{order:1!important;width:100%!important;max-width:520px}
-  .side-col.right-col{order:2!important;width:100%!important;max-width:520px}
-  .side-col.left-col{order:3!important;width:100%!important;max-width:520px}
-  .board-actions .abtn{font-size:.64rem;padding:8px 3px}
+  header{padding:10px 14px}
+  .logo{font-size:1.15rem}
+  main{flex-direction:column;align-items:center;padding:8px 8px 30px;gap:10px;width:100%}
+  .board-col{order:1!important;width:100%!important;max-width:500px;gap:6px}
+  .mobile-tabs{display:flex}
+  .board-actions{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:2px;width:100%}
+  .board-actions .abtn, .board-actions .nbtn-sm{min-width:0;padding:9px 2px;font-size:.65rem;display:flex;align-items:center;justify-content:center}
+  .btn-lbl{display:none} /* Concise icon buttons on mobile */
+  
+  /* Hide side columns and their panels on mobile by default */
+  .side-col.left-col,
+  .side-col.right-col,
+  #panel-cat,
+  #panel-eval,
+  #panel-moves{display:none!important}
+
+  /* Moves Tab Active (Default Lichess Play Screen) */
+  body.tab-moves .side-col.right-col{display:flex!important;order:2!important;width:100%!important;max-width:500px}
+  body.tab-moves #panel-eval{display:block!important}
+  body.tab-moves #panel-moves{display:flex!important;min-height:180px;max-height:280px}
+
+  /* Settings Tab Active (Full Game Settings) */
+  body.tab-settings .side-col.left-col{display:flex!important;order:2!important;width:100%!important;max-width:500px}
+  body.tab-settings.p2p-active .side-col.right-col{display:flex!important;order:3!important;width:100%!important;max-width:500px}
+  body.tab-settings.p2p-active #p2p-panel{display:block!important}
+
+  /* Bluerica Cat Tab Active (Full-size Photo & Info) */
+  body.tab-cat .side-col.right-col{display:flex!important;order:2!important;width:100%!important;max-width:500px}
+  body.tab-cat #panel-cat{display:block!important}
+  body.tab-cat #panel-cat img{height:260px}
 }
 </style>
 </head>
@@ -284,19 +316,26 @@ body.focus-mode .board-actions{max-width:640px}
 
     <!-- Action buttons directly below the board -->
     <div class="board-actions">
-      <button class="abtn" id="bbk" title="Previous move">◀ Back</button>
-      <button class="abtn" id="bfw" title="Next move">Forward ▶</button>
-      <button class="abtn" id="bcalc" title="Free play analysis mode for both sides">🧠 Analysis</button>
-      <button class="abtn hbtn" id="bhint" title="Move suggestion">💡 Hint</button>
-      <button class="abtn rbtn" id="bres" title="Resign game">🏳 Resign</button>
-      <button class="nbtn-sm" id="ngame" title="New Game">🔄 New Game</button>
+      <button class="abtn" id="bbk" title="Previous move">◀<span class="btn-lbl"> Back</span></button>
+      <button class="abtn" id="bfw" title="Next move"><span class="btn-lbl">Forward </span>▶</button>
+      <button class="abtn" id="bcalc" title="Free play analysis mode for both sides">🧠<span class="btn-lbl"> Analysis</span></button>
+      <button class="abtn hbtn" id="bhint" title="Move suggestion">💡<span class="btn-lbl"> Hint</span></button>
+      <button class="abtn rbtn" id="bres" title="Resign game">🏳<span class="btn-lbl"> Resign</span></button>
+      <button class="nbtn-sm" id="ngame" title="New Game">🔄<span class="btn-lbl"> New Game</span></button>
+    </div>
+
+    <!-- Mobile Segmented Tabs (Lichess Experience - Visible on screens <=980px) -->
+    <div class="mobile-tabs" id="mobile-tabs">
+      <button class="mtab active" data-tab="moves">📜 Moves</button>
+      <button class="mtab" data-tab="settings">⚙️ Settings</button>
+      <button class="mtab" data-tab="cat">🐱 Bluerica</button>
     </div>
   </section>
 
   <!-- RIGHT COLUMN: Bluerica Cat Banner, Evaluation, P2P Room & Move History -->
   <aside class="side-col right-col" id="col-right">
     <!-- Bluerica Cat Profile Card (Soul of the App on the RIGHT!) -->
-    <div class="panel cat-card">
+    <div class="panel cat-card" id="panel-cat">
       <img src="cat.jpg" alt="Bluerica">
       <div class="cat-info">
         <div class="cat-name">BLUERICA</div>
@@ -305,7 +344,7 @@ body.focus-mode .board-actions{max-width:640px}
     </div>
 
     <!-- Live Eval Bar -->
-    <div class="panel">
+    <div class="panel" id="panel-eval">
       <div class="ph">Position Eval</div>
       <div class="pb" style="padding:10px 14px">
         <div class="eval-row">
@@ -344,7 +383,7 @@ body.focus-mode .board-actions{max-width:640px}
     </div>
 
     <!-- Move History List -->
-    <div class="panel panel-moves">
+    <div class="panel panel-moves" id="panel-moves">
       <div class="ph">Move History</div>
       <div class="pb mlist-wrap">
         <div class="mlist" id="mlist"><div class="emp">— no moves yet —</div></div>
@@ -610,10 +649,21 @@ function initEngine(){
   }catch(e){G('elabel').textContent='Engine unavailable'}
 }
 
+let evalPending = null;
+let evalTimer = null;
+
 function setEval(cp){
-  const p=Math.min(Math.max(50+cp*3.5,4),96);
-  G('efill').style.width=p+'%';
-  G('enum').textContent=cp>=99?'+M':cp<=-99?'-M':(cp>=0?'+':'')+cp.toFixed(1);
+  evalPending = cp;
+  if(!evalTimer){
+    evalTimer = requestAnimationFrame(()=>{
+      if(evalPending !== null){
+        const p=Math.min(Math.max(50+evalPending*3.5,4),96);
+        G('efill').style.width=p+'%';
+        G('enum').textContent=evalPending>=99?'+M':evalPending<=-99?'-M':(evalPending>=0?'+':'')+evalPending.toFixed(1);
+      }
+      evalTimer = null;
+    });
+  }
 }
 
 async function bestMove(fen, dp){
@@ -642,11 +692,13 @@ function chooseEngineMove(legalMoves, bestMoveUci, blunderRate){
 // ── Board Rendering (Enlarged & Crisp) ────────────────────────────────────────
 function boardPx(){
   if(document.body.classList.contains('focus-mode')){
-    const max = Math.min(window.innerWidth - 32, window.innerHeight - 150, 720);
-    return Math.max(Math.floor(max / 8) * 8, 280);
+    const max = Math.min(window.innerWidth - 16, window.innerHeight - 130, 720);
+    return Math.max(Math.floor(max / 8) * 8, 260);
   }
   if(window.innerWidth <= 980){
-    const max = Math.min(window.innerWidth - 20, window.innerHeight - 200, 520);
+    const availW = window.innerWidth - 16;
+    const availH = window.innerHeight - 240;
+    const max = Math.min(availW, availH > 260 ? availH : availW, 500);
     return Math.max(Math.floor(max / 8) * 8, 280);
   }
   // Available width between the two sidebars (220px left + 260px right + 36px gaps + 40px padding = 556px)
@@ -665,38 +717,87 @@ function renderBoard(pos){
     sqSize = sz / 8;
     brd.style.width = sz + 'px';
     brd.style.height = sz + 'px';
-    brd.innerHTML = '';
 
     const fenObj = pos ? new Chess(typeof pos === 'string' ? pos : pos.fen()) : chess;
+    const existingSquares = brd.querySelectorAll('.sq');
 
-    for(let ri = 0; ri < 8; ri++){
-      for(let ci = 0; ci < 8; ci++){
-        const row = flip ? ri : 7 - ri, col = flip ? 7 - ci : ci;
-        const sq = 'abcdefgh'[col] + (row + 1);
-        const light = (row + col) % 2 === 1;
-        const div = document.createElement('div');
-        div.className = 'sq ' + (light ? 'ls' : 'ds');
-        div.dataset.sq = sq;
-        div.style.width = sqSize + 'px';
-        div.style.height = sqSize + 'px';
+    if(existingSquares.length === 64){
+      for(let ri = 0; ri < 8; ri++){
+        for(let ci = 0; ci < 8; ci++){
+          const row = flip ? ri : 7 - ri, col = flip ? 7 - ci : ci;
+          const sq = 'abcdefgh'[col] + (row + 1);
+          const light = (row + col) % 2 === 1;
+          const idx = ri * 8 + ci;
+          const div = existingSquares[idx];
 
-        // coords
-        if(ci === 0){ const r = document.createElement('span'); r.className = 'coord-r'; r.textContent = row + 1; div.appendChild(r); }
-        if(ri === 7){ const f = document.createElement('span'); f.className = 'coord-f'; f.textContent = 'abcdefgh'[col]; div.appendChild(f); }
+          div.className = 'sq ' + (light ? 'ls' : 'ds');
+          div.dataset.sq = sq;
+          div.style.width = sqSize + 'px';
+          div.style.height = sqSize + 'px';
 
-        // piece
-        const p = fenObj ? fenObj.get(sq) : null;
-        if(p){
-          const img = document.createElement('img');
-          img.src = getPieceUrl(p.color, p.type);
-          img.draggable = false;
-          div.appendChild(img);
+          // coords
+          let r = div.querySelector('.coord-r');
+          if(ci === 0){
+            if(!r){ r = document.createElement('span'); r.className = 'coord-r'; div.appendChild(r); }
+            r.textContent = row + 1;
+          } else if(r){ r.remove(); }
+
+          let f = div.querySelector('.coord-f');
+          if(ri === 7){
+            if(!f){ f = document.createElement('span'); f.className = 'coord-f'; div.appendChild(f); }
+            f.textContent = 'abcdefgh'[col];
+          } else if(f){ f.remove(); }
+
+          // piece
+          const p = fenObj ? fenObj.get(sq) : null;
+          let img = div.querySelector('img');
+          if(p){
+            const src = getPieceUrl(p.color, p.type);
+            if(!img){
+              img = document.createElement('img');
+              img.draggable = false;
+              div.appendChild(img);
+            }
+            if(img.getAttribute('src') !== src) img.src = src;
+            img.classList.remove('dragging');
+          } else if(img){
+            img.remove();
+          }
         }
-
-        div.addEventListener('mousedown', e => onPointerDown(e, sq, false));
-        div.addEventListener('touchstart', e => onPointerDown(e, sq, true), { passive: false });
-        brd.appendChild(div);
       }
+    } else {
+      brd.innerHTML = '';
+      const frag = document.createDocumentFragment();
+      for(let ri = 0; ri < 8; ri++){
+        for(let ci = 0; ci < 8; ci++){
+          const row = flip ? ri : 7 - ri, col = flip ? 7 - ci : ci;
+          const sq = 'abcdefgh'[col] + (row + 1);
+          const light = (row + col) % 2 === 1;
+          const div = document.createElement('div');
+          div.className = 'sq ' + (light ? 'ls' : 'ds');
+          div.dataset.sq = sq;
+          div.style.width = sqSize + 'px';
+          div.style.height = sqSize + 'px';
+
+          // coords
+          if(ci === 0){ const r = document.createElement('span'); r.className = 'coord-r'; r.textContent = row + 1; div.appendChild(r); }
+          if(ri === 7){ const f = document.createElement('span'); f.className = 'coord-f'; f.textContent = 'abcdefgh'[col]; div.appendChild(f); }
+
+          // piece
+          const p = fenObj ? fenObj.get(sq) : null;
+          if(p){
+            const img = document.createElement('img');
+            img.src = getPieceUrl(p.color, p.type);
+            img.draggable = false;
+            div.appendChild(img);
+          }
+
+          div.addEventListener('mousedown', e => onPointerDown(e, div.dataset.sq, false));
+          div.addEventListener('touchstart', e => onPointerDown(e, div.dataset.sq, true), { passive: false });
+          frag.appendChild(div);
+        }
+      }
+      brd.appendChild(frag);
     }
 
     // sync canvas
@@ -1261,7 +1362,9 @@ function updateMoves(){
     const n=Math.floor(i/2)+1;
     html+=`<div class="mrow${i>=h.length-2?' lat':''}"><span class="mn">${n}.</span><span class="mw">${h[i]||''}</span><span class="mb">${h[i+1]||''}</span></div>`;
   }
-  const ml=G('mlist'); ml.innerHTML=html; ml.scrollTop=ml.scrollHeight;
+  const ml=G('mlist');
+  ml.innerHTML=html;
+  requestAnimationFrame(()=>{ ml.scrollTop=ml.scrollHeight; });
 }
 
 // ── Game Over & Promotion ─────────────────────────────────────────────────────
@@ -1385,6 +1488,7 @@ function newGame(){
 // ── P2P Multiplayer (WebRTC / PeerJS) ─────────────────────────────────────────
 function setGameMode(mode){
   gameMode = mode;
+  document.body.classList.toggle('p2p-active', mode === 'p2p');
   if(mode === 'p2p'){
     G('m-p2p').classList.add('on');
     G('m-bot').classList.remove('on');
@@ -1676,6 +1780,20 @@ G('bres').addEventListener('click',()=>{
   snd('GenericNotify');G('mg').textContent='🏳';G('mt').textContent='You resigned';G('mm').textContent='BLUERICA wins. 😼';G('ov').classList.add('show');
 });
 
+// ── Mobile Segmented Tabs (Lichess Experience) ────────────────────────────────
+let currentMobileTab = 'moves';
+function setMobileTab(tab){
+  currentMobileTab = tab;
+  document.body.classList.remove('tab-moves','tab-settings','tab-cat');
+  document.body.classList.add('tab-' + tab);
+  document.querySelectorAll('.mtab').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+}
+document.querySelectorAll('.mtab').forEach(b => {
+  b.addEventListener('click', () => setMobileTab(b.dataset.tab));
+});
+
 // Window resize
 window.addEventListener('resize',()=>{renderBoard();drawArrows()});
 
@@ -1688,6 +1806,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
+setMobileTab('moves');
 initEngine();
 newGame();
 </script>
