@@ -6,6 +6,7 @@
 <title>Bluerica Chess</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -23,35 +24,38 @@ header{display:flex;align-items:center;justify-content:space-between;padding:12p
 .badge.go{border-color:var(--green);color:var(--green)}
 .badge.wait{border-color:var(--accent);color:var(--accent)}
 .badge.chk{border-color:var(--red);color:var(--red)}
+.badge.calc{border-color:#e6a028;color:#e6a028;background:rgba(230,160,40,0.12)}
+.badge.p2p{border-color:#5ea87a;color:#5ea87a;background:rgba(94,168,122,0.12)}
 
 main{display:flex;justify-content:center;align-items:flex-start;gap:20px;padding:16px;flex-wrap:wrap}
 
 /* Board */
-.board-col{display:flex;flex-direction:column;align-items:center;gap:5px}
+.board-col{display:flex;flex-direction:column;align-items:center;gap:5px;position:relative}
 .pbar{display:flex;align-items:center;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;gap:8px}
 .pbar.active{color:var(--text)}
 .tdot{width:6px;height:6px;border-radius:50%;background:var(--green);display:none;flex-shrink:0}
 .pbar.active .tdot{display:block}
 
-#bwrap{position:relative;touch-action:none}
+#bwrap{position:relative;touch-action:none;user-select:none;-webkit-user-select:none}
 #bwrap canvas.arrows{position:absolute;top:0;left:0;pointer-events:none;z-index:20}
 
 /* Board squares rendered by JS */
-#bwrap .board{display:grid;grid-template-columns:repeat(8,1fr);user-select:none}
-.sq{position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer}
+#bwrap .board{display:grid;grid-template-columns:repeat(8,1fr);user-select:none;-webkit-user-select:none}
+.sq{position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .sq.ls{background:var(--ls)}
 .sq.ds{background:var(--ds)}
 .sq.sel{background:rgba(255,255,255,0.22)!important;box-shadow:inset 0 0 0 3px rgba(255,255,255,0.6)!important}
 .sq.lmf{background:rgba(200,164,90,0.28)!important}
 .sq.lmt{background:rgba(200,164,90,0.5)!important}
-.sq.rch{background:rgba(200,50,50,0.5)!important}
+.sq.rch{background:rgba(230,160,40,0.35)!important;box-shadow:inset 0 0 0 3px rgba(230,160,40,0.75)!important}
 .sq.pre{background:rgba(100,180,255,0.38)!important}
 .sq.ehi{box-shadow:inset 0 0 0 4px rgba(100,200,100,0.9)!important}
+.sq.drag-over{box-shadow:inset 0 0 0 4px rgba(255,255,255,0.75)!important}
 
 /* Move hint dot */
-.sq.dot::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:32%;height:32%;border-radius:50%;background:rgba(0,0,0,0.22);pointer-events:none;z-index:5}
+.sq.dot::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:32%;height:32%;border-radius:50%;background:rgba(0,0,0,0.24);pointer-events:none;z-index:5}
 /* Capture hint ring */
-.sq.ring::after{content:'';position:absolute;inset:0;border-radius:50%;border:5px solid rgba(0,0,0,0.2);pointer-events:none;z-index:5}
+.sq.ring::after{content:'';position:absolute;inset:0;border-radius:50%;border:5px solid rgba(0,0,0,0.22);pointer-events:none;z-index:5}
 
 /* Coord labels */
 .coord-r{position:absolute;top:2px;left:3px;font-family:'JetBrains Mono',monospace;font-size:.55rem;font-weight:500;pointer-events:none;z-index:2}
@@ -60,12 +64,16 @@ main{display:flex;justify-content:center;align-items:flex-start;gap:20px;padding
 .sq.ds .coord-r,.sq.ds .coord-f{color:var(--ls)}
 
 /* Piece image */
-.sq img{width:88%;height:88%;pointer-events:none;position:relative;z-index:3}
+.sq img{width:88%;height:88%;pointer-events:none;position:relative;z-index:3;transition:opacity .1s ease}
 
 /* Dragging ghost */
-.drag-ghost{position:fixed;pointer-events:none;z-index:1000;transform:translate(-50%,-50%)}
+.drag-ghost{position:fixed;pointer-events:none;z-index:1000;transform:translate(-50%,-50%);filter:drop-shadow(0 10px 18px rgba(0,0,0,0.55));will-change:left,top}
 .drag-ghost img{width:100%;height:100%}
-.sq img.dragging{opacity:0}
+.sq img.dragging{opacity:0.25}
+
+/* Floating emoji reactions */
+.toast-reaction{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.5);font-size:3.5rem;z-index:900;pointer-events:none;animation:popToast 1.2s ease forwards}
+@keyframes popToast{0%{opacity:0;transform:translate(-50%,-50%) scale(0.4)}30%{opacity:1;transform:translate(-50%,-50%) scale(1.3)}70%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-70%) scale(0.8)}}
 
 /* Sidebar */
 .side{width:240px;display:flex;flex-direction:column;gap:12px}
@@ -83,10 +91,12 @@ main{display:flex;justify-content:center;align-items:flex-start;gap:20px;padding
 .db{padding:7px 4px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:.6rem;cursor:pointer;transition:all .15s;text-align:center}
 .db:hover{border-color:var(--accent);color:var(--text)}
 .db.on{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
-.ds2{display:block;font-size:.52rem;margin-top:2px;opacity:.5;font-family:'Inter',sans-serif}
+.ds2{display:block;font-size:.52rem;margin-top:2px;opacity:.65;font-family:'Inter',sans-serif}
 
 .crow{display:flex;gap:8px}
-.cb{flex:1;padding:9px 4px;border:1px solid var(--border);background:transparent;border-radius:4px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:.65rem;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px;color:var(--muted)}
+.cb{flex:1;padding:9px 4px;border:1px solid var(--border);background:transparent;border-radius:4px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:.62rem;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px;color:var(--muted)}
+.cb:hover{border-color:var(--accent);color:var(--text)}
+.cb.on{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
 .cb.wc{color:#d4c9a8}.cb.wc.on{border-color:#d4c9a8;background:rgba(212,201,168,.08);color:#e8dfc8}
 .cb.bc.on{border-color:var(--text);color:var(--text);background:rgba(255,255,255,.04)}
 
@@ -96,6 +106,7 @@ main{display:flex;justify-content:center;align-items:flex-start;gap:20px;padding
 .arow{display:flex;gap:8px}
 .abtn{flex:1;padding:8px 4px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:.6rem;cursor:pointer;transition:all .15s;white-space:nowrap}
 .abtn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.abtn.on{border-color:#e6a028;color:#e6a028;background:rgba(230,160,40,0.12)}
 .abtn:disabled{opacity:.25;cursor:not-allowed}
 .hbtn:hover:not(:disabled){border-color:#7ec8a0;color:#7ec8a0}
 .rbtn:hover:not(:disabled){border-color:var(--red);color:var(--red)}
@@ -151,27 +162,73 @@ main{display:flex;justify-content:center;align-items:flex-start;gap:20px;padding
     <div class="eng-row"><div class="edot" id="edot"></div><span id="elabel">Loading…</span></div>
     <div class="panel cat"><img src="cat.jpg" alt="Bluerica"></div>
     <div class="panel"><div class="pb" style="padding:10px 14px"><div class="eval-row"><div class="eval-bar"><div class="eval-fill" id="efill"></div></div><div class="eval-n" id="enum">0.0</div></div></div></div>
-    <div class="panel"><div class="ph">Difficulty</div><div class="pb"><div class="dgrid">
-      <button class="db on" data-sk="0"  data-dp="1" data-dl="1400">1<span class="ds2">Newbie</span></button>
-      <button class="db"    data-sk="1"  data-dp="1" data-dl="1100">2<span class="ds2">Beginner</span></button>
-      <button class="db"    data-sk="3"  data-dp="2" data-dl="900">3<span class="ds2">Easy</span></button>
-      <button class="db"    data-sk="5"  data-dp="3" data-dl="700">4<span class="ds2">Casual</span></button>
-      <button class="db"    data-sk="8"  data-dp="5" data-dl="600">5<span class="ds2">Medium</span></button>
-      <button class="db"    data-sk="11" data-dp="7" data-dl="500">6<span class="ds2">Club</span></button>
-      <button class="db"    data-sk="14" data-dp="10" data-dl="400">7<span class="ds2">Hard</span></button>
-      <button class="db"    data-sk="17" data-dp="13" data-dl="350">8<span class="ds2">Expert</span></button>
-      <button class="db"    data-sk="20" data-dp="18" data-dl="280">∞<span class="ds2">Max</span></button>
+
+    <!-- Piece Theme Selector -->
+    <div class="panel"><div class="ph">Piece Style / Piese</div><div class="pb"><div class="crow">
+      <button class="cb on" id="t-classic">♟ Classic</button>
+      <button class="cb"    id="t-cburnett">♚ Modern</button>
     </div></div></div>
-    <div class="panel"><div class="ph">Play as</div><div class="pb"><div class="crow">
+
+    <!-- Game Mode: Bot vs P2P Friend -->
+    <div class="panel"><div class="ph">Game Mode / Mod Joc</div><div class="pb"><div class="crow">
+      <button class="cb on" id="m-bot">🤖 vs Bluerica</button>
+      <button class="cb"    id="m-p2p">👥 vs Prieten (P2P)</button>
+    </div></div></div>
+
+    <!-- P2P Room Panel (visible in P2P mode) -->
+    <div class="panel" id="p2p-panel" style="display:none">
+      <div class="ph">Cameră Prieteni (P2P)</div>
+      <div class="pb" style="display:flex;flex-direction:column;gap:8px">
+        <div id="p2p-idle">
+          <button class="nbtn" id="p2p-create" style="background:#5ea87a;margin-bottom:8px">🟢 Creează Cameră</button>
+          <div style="display:flex;gap:4px">
+            <input type="text" id="p2p-code-in" placeholder="Cod cameră…" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:6px 8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.65rem">
+            <button class="abtn" id="p2p-join" style="padding:6px 10px">Intră</button>
+          </div>
+        </div>
+        <div id="p2p-active" style="display:none;flex-direction:column;gap:8px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted)">Cod: <strong id="p2p-code-display" style="color:var(--accent);font-size:.75rem"></strong></div>
+          <div id="p2p-status-badge" style="font-size:.62rem;color:var(--accent);font-family:'JetBrains Mono',monospace">⏳ Așteptare prieten…</div>
+          <button class="abtn" id="p2p-copy-btn">📋 Copiază Link Invitație</button>
+          <a id="p2p-wa-btn" target="_blank" class="abtn" style="text-align:center;text-decoration:none;display:block;border-color:#25d366;color:#25d366">💬 Trimite pe WhatsApp</a>
+          <div class="crow" id="p2p-reactions" style="display:none;margin-top:4px">
+            <button class="abtn p2p-reac" data-emo="👏">👏</button>
+            <button class="abtn p2p-reac" data-emo="🤝">🤝</button>
+            <button class="abtn p2p-reac" data-emo="😮">😮</button>
+            <button class="abtn p2p-reac" data-emo="🔥">🔥</button>
+            <button class="abtn p2p-reac" data-emo="❤️">❤️</button>
+          </div>
+          <button class="abtn rbtn" id="p2p-leave" style="margin-top:4px">❌ Închide Camera</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Difficulty (hidden in P2P mode) -->
+    <div class="panel" id="panel-difficulty"><div class="ph">Difficulty</div><div class="pb"><div class="dgrid">
+      <button class="db"    data-lvl="1">1<span class="ds2">Newbie</span></button>
+      <button class="db on" data-lvl="2">2<span class="ds2">Beginner</span></button>
+      <button class="db"    data-lvl="3">3<span class="ds2">Easy</span></button>
+      <button class="db"    data-lvl="4">4<span class="ds2">Casual</span></button>
+      <button class="db"    data-lvl="5">5<span class="ds2">Medium</span></button>
+      <button class="db"    data-lvl="6">6<span class="ds2">Club</span></button>
+      <button class="db"    data-lvl="7">7<span class="ds2">Hard</span></button>
+      <button class="db"    data-lvl="8">8<span class="ds2">Expert</span></button>
+      <button class="db"    data-lvl="9">∞<span class="ds2">Max</span></button>
+    </div></div></div>
+
+    <!-- Play as (hidden in P2P mode) -->
+    <div class="panel" id="panel-playas"><div class="ph">Play as</div><div class="pb"><div class="crow">
       <button class="cb wc on" id="bw">⬜ White</button>
       <button class="cb bc"    id="bb">⬛ Black</button>
     </div></div></div>
+
     <button class="nbtn" id="ngame">New Game</button>
     <div class="arow">
       <button class="abtn" id="bbk">◀ Back</button>
       <button class="abtn" id="bfw">Forward ▶</button>
     </div>
     <div class="arow">
+      <button class="abtn" id="bcalc">🧠 Mod Calcul</button>
       <button class="abtn hbtn" id="bhint">💡 Hint</button>
       <button class="abtn rbtn" id="bres">🏳 Resign</button>
     </div>
@@ -193,23 +250,71 @@ main{display:flex;justify-content:center;align-items:flex-start;gap:20px;padding
 
 <script>
 const G = id => document.getElementById(id);
-const PIECES = 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/cburnett/';
 
-// ── State ─────────────────────────────────────────────────────────────────────
+// ── Piece Themes ─────────────────────────────────────────────────────────────
+let currentPieceTheme = localStorage.getItem('bl_theme') || 'classic';
+
+function getPieceUrl(color, type){
+  if(currentPieceTheme === 'classic'){
+    return 'pieces/classic/' + color + type.toLowerCase() + '.png';
+  }
+  return 'pieces/cburnett/' + color + type.toUpperCase() + '.svg';
+}
+
+function updateThemeUI(){
+  if(currentPieceTheme === 'classic'){
+    G('t-classic').classList.add('on');
+    G('t-cburnett').classList.remove('on');
+  } else {
+    G('t-cburnett').classList.add('on');
+    G('t-classic').classList.remove('on');
+  }
+}
+
+// ── Difficulty Tuning ────────────────────────────────────────────────────────
+const LEVEL_CONFIG = {
+  1: { dp: 1, dl: 1300, blunderRate: 0.45, label: 'Newbie' },
+  2: { dp: 1, dl: 1100, blunderRate: 0.25, label: 'Beginner' },
+  3: { dp: 2, dl: 900,  blunderRate: 0.10, label: 'Easy' },
+  4: { dp: 3, dl: 700,  blunderRate: 0.00, label: 'Casual' },
+  5: { dp: 5, dl: 600,  blunderRate: 0.00, label: 'Medium' },
+  6: { dp: 7, dl: 500,  blunderRate: 0.00, label: 'Club' },
+  7: { dp: 10, dl: 400, blunderRate: 0.00, label: 'Hard' },
+  8: { dp: 13, dl: 350, blunderRate: 0.00, label: 'Expert' },
+  9: { dp: 18, dl: 280, blunderRate: 0.00, label: 'Max' }
+};
+
+let currentLevel = parseInt(localStorage.getItem('bl_lvl') || '2');
+
+// ── Game State ───────────────────────────────────────────────────────────────
+let gameMode = 'bot';                // 'bot' sau 'p2p'
 let chess = new Chess();
 let playerColor = 'w';
 let sqSize = 0;
 let engineReady = false, engineBusy = false;
 let sf = null, sfResolve = null;
-let skill = 0, depth = 1, delay = 1400;
-let snap = [], vi = -1;          // history snapshot, view index
-let selSq = null, legal = [];    // selected square, legal targets
-let ppFrom = null, ppTo = null;  // pending promotion
-let pmFrom = null, pmTo = null;  // premove
-let rcFrom = null, rcDrag = false; // right-click
+let snap = [], vi = -1;              // history snapshot, view index
+let selSq = null, legal = [];        // selected square, legal targets
+let ppFrom = null, ppTo = null;      // pending promotion
+let pmFrom = null, pmTo = null;      // premove
+let rcFrom = null, rcDrag = false;   // right-click
 let rcHL = {}, arrows = [];
-let dragFrom = null, ghost = null;
-let viewOnlyMode = false;        // true when browsing history
+let viewOnlyMode = false;            // true when browsing history
+let analysisMode = false;            // true in Mod Calcul (free play for both sides)
+
+// Drag & drop state
+let dragCandidate = null;
+let isDragging = false;
+let startPos = { x: 0, y: 0 };
+let ghost = null;
+let currentHoverSq = null;
+let lastFrom = null, lastTo = null;
+
+// P2P State
+let peer = null;
+let p2pConn = null;
+let isHost = false;
+let p2pRoomId = null;
 
 // ── Sounds ────────────────────────────────────────────────────────────────────
 const SND = {};
@@ -240,7 +345,8 @@ function initEngine(){
       if(m==='uciok'){sf.postMessage('isready');return}
       if(m==='readyok'){
         engineReady=true;G('edot').className='edot rdy';G('elabel').textContent='BLUERICA ready';
-        setBadge('your move','go'); return;
+        if(gameMode==='bot') setBadge('your move','go');
+        return;
       }
       if(m&&m.startsWith('bestmove')&&sfResolve){
         const mv=m.split(' ')[1],cb=sfResolve;sfResolve=null;cb(mv==='(none)'?null:mv);return;
@@ -252,28 +358,43 @@ function initEngine(){
     sf.postMessage('uci');
   }catch(e){G('elabel').textContent='Engine unavailable'}
 }
+
 function setEval(cp){
   const p=Math.min(Math.max(50+cp*3.5,4),96);
   G('efill').style.width=p+'%';
   G('enum').textContent=cp>=99?'+M':cp<=-99?'-M':(cp>=0?'+':'')+cp.toFixed(1);
 }
-async function bestMove(fen){
+
+async function bestMove(fen, dp){
   return new Promise(r=>{
     sfResolve=r;
-    sf.postMessage('setoption name Skill Level value '+skill);
     sf.postMessage('position fen '+fen);
-    sf.postMessage('go depth '+depth);
+    sf.postMessage('go depth '+(dp || 1));
   });
+}
+
+function chooseEngineMove(legalMoves, bestMoveUci, blunderRate){
+  if(!bestMoveUci || !legalMoves.length) return bestMoveUci;
+  if(!blunderRate || blunderRate <= 0 || legalMoves.length <= 1) return bestMoveUci;
+
+  if(Math.random() < blunderRate){
+    const bestUci = bestMoveUci.slice(0, 4);
+    const candidateMoves = legalMoves.filter(m => (m.from + m.to) !== bestUci);
+    if(candidateMoves.length > 0){
+      const picked = candidateMoves[Math.floor(Math.random() * candidateMoves.length)];
+      return picked.from + picked.to + (picked.promotion || 'q');
+    }
+  }
+  return bestMoveUci;
 }
 
 // ── Board rendering ───────────────────────────────────────────────────────────
 function boardPx(){
   const max=window.innerWidth<=820?window.innerWidth-16:Math.min(window.innerWidth-290,580);
-  return Math.floor(max/8)*8; // divisible by 8
+  return Math.floor(max/8)*8;
 }
 
 function renderBoard(pos){
-  // pos = chess object or fen string to render (default = chess)
   const brd=G('board');
   const flip=playerColor==='b';
   const sz=boardPx(); sqSize=sz/8;
@@ -300,13 +421,13 @@ function renderBoard(pos){
       const p=fenObj.get(sq);
       if(p){
         const img=document.createElement('img');
-        img.src=PIECES+(p.color==='w'?'w':'b')+p.type.toUpperCase()+'.svg';
+        img.src=getPieceUrl(p.color, p.type);
         img.draggable=false;
         div.appendChild(img);
       }
 
-      div.addEventListener('mousedown',e=>onMouseDown(e,sq));
-      div.addEventListener('touchstart',e=>onTouchStart(e,sq),{passive:false});
+      div.addEventListener('mousedown',e=>onPointerDown(e,sq,false));
+      div.addEventListener('touchstart',e=>onPointerDown(e,sq,true),{passive:false});
       brd.appendChild(div);
     }
   }
@@ -323,91 +444,169 @@ function renderBoard(pos){
 function getSqEl(sq){return G('board').querySelector('[data-sq="'+sq+'"]')}
 
 function applySquareClasses(){
-  // Clear all state classes
   G('board').querySelectorAll('.sq').forEach(el=>{
-    el.classList.remove('sel','lmf','lmt','rch','pre','ehi','dot','ring');
+    el.classList.remove('sel','lmf','lmt','rch','pre','ehi','dot','ring','drag-over');
   });
-  // Selected
   if(selSq) getSqEl(selSq)?.classList.add('sel');
-  // Legal hints
   legal.forEach(t=>{
     const el=getSqEl(t); if(!el) return;
     el.classList.add(chess.get(t)?'ring':'dot');
   });
-  // Last move
   if(lastFrom) getSqEl(lastFrom)?.classList.add('lmf');
   if(lastTo)   getSqEl(lastTo)?.classList.add('lmt');
-  // RC highlights
   Object.keys(rcHL).forEach(sq=>getSqEl(sq)?.classList.add('rch'));
-  // Premove
   if(pmFrom){getSqEl(pmFrom)?.classList.add('pre');getSqEl(pmTo)?.classList.add('pre')}
 }
 
-let lastFrom=null, lastTo=null;
-
-// ── Click / touch to move ────────────────────────────────────────────────────
-function onMouseDown(e,sq){
-  if(e.button===2) return; // handled by right-click
-  e.preventDefault();
-  clearArrowsHL();
-  handleSelect(e.clientX, e.clientY, sq, true);
+// ── Piece Interaction ─────────────────────────────────────────────────────────
+function isAllowedToMove(piece){
+  if(analysisMode) return piece && piece.color === chess.turn();
+  if(gameMode === 'p2p') return piece && piece.color === playerColor && chess.turn() === playerColor;
+  return piece && piece.color === playerColor && chess.turn() === playerColor && !engineBusy;
 }
 
-function onTouchStart(e,sq){
-  e.preventDefault();
-  const t=e.touches[0];
-  clearArrowsHL();
-  handleSelect(t.clientX, t.clientY, sq, false);
-}
+function onPointerDown(e, sq, isTouch){
+  if(!isTouch && e.button === 2) return;
+  if(isTouch) e.preventDefault();
 
-function handleSelect(cx,cy,sq,enableDrag){
+  const clientX = isTouch ? e.touches[0].clientX : e.clientX;
+  const clientY = isTouch ? e.touches[0].clientY : e.clientY;
+
   if(chess.game_over()) return;
-
-  // If in view mode - click moves back to live
   if(viewOnlyMode){ returnToLive(); return; }
 
-  // Engine thinking - set premove
-  if(engineBusy||chess.turn()!==playerColor){
+  // Premove / wait in bot mode
+  if(gameMode === 'bot' && !analysisMode && (engineBusy || chess.turn() !== playerColor)){
+    const p = chess.get(sq);
     if(selSq){
-      const p=chess.get(selSq);
-      if(p&&p.color===playerColor){
-        setPremove(selSq,sq); clearSel(); return;
+      const sp = chess.get(selSq);
+      if(sp && sp.color === playerColor){
+        setPremove(selSq, sq); clearSel(); return;
       }
     }
-    const p=chess.get(sq);
-    if(p&&p.color===playerColor){selSq=sq;legal=[];applySquareClasses();}
+    if(p && p.color === playerColor){
+      selSq = sq; legal = []; applySquareClasses();
+    }
     return;
   }
 
-  // If square selected
+  // Already selected
   if(selSq){
-    if(sq===selSq){clearSel();return}
-    if(legal.includes(sq)){
-      doMove(selSq,sq); return;
+    if(sq === selSq){ clearSel(); return; }
+    if(legal.includes(sq)){ doMove(selSq, sq); return; }
+    const p = chess.get(sq);
+    if(isAllowedToMove(p)){
+      selSq = sq;
+      legal = chess.moves({square: sq, verbose: true}).map(m => m.to);
+      applySquareClasses();
+      startDragCandidate(clientX, clientY, sq, p);
+      return;
     }
-    const p=chess.get(sq);
-    if(p&&p.color===playerColor){selSq=sq;legal=chess.moves({square:sq,verbose:true}).map(m=>m.to);applySquareClasses();return}
-    clearSel(); return;
+    clearSel();
+    if(Object.keys(rcHL).length > 0 || arrows.length > 0) clearArrowsHL();
+    return;
   }
 
-  // Select own piece
-  const p=chess.get(sq);
-  if(p&&p.color===playerColor){
-    selSq=sq; legal=chess.moves({square:sq,verbose:true}).map(m=>m.to);
+  const p = chess.get(sq);
+  if(isAllowedToMove(p)){
+    selSq = sq;
+    legal = chess.moves({square: sq, verbose: true}).map(m => m.to);
     applySquareClasses();
-    // Start drag
-    if(enableDrag) startDrag(cx,cy,sq,p);
+    startDragCandidate(clientX, clientY, sq, p);
+  } else {
+    if(Object.keys(rcHL).length > 0 || arrows.length > 0) clearArrowsHL();
   }
 }
+
+function startDragCandidate(cx, cy, sq, piece){
+  dragCandidate = { sq, piece };
+  isDragging = false;
+  startPos = { x: cx, y: cy };
+  currentHoverSq = null;
+}
+
+function handlePointerMove(cx, cy){
+  if(!dragCandidate) return;
+
+  if(!isDragging){
+    const dist = Math.hypot(cx - startPos.x, cy - startPos.y);
+    if(dist > 5){
+      isDragging = true;
+      const pieceEl = getSqEl(dragCandidate.sq)?.querySelector('img');
+      if(pieceEl) pieceEl.classList.add('dragging');
+
+      ghost = document.createElement('div');
+      ghost.className = 'drag-ghost';
+      ghost.style.width = sqSize + 'px';
+      ghost.style.height = sqSize + 'px';
+      ghost.innerHTML = '<img src="' + getPieceUrl(dragCandidate.piece.color, dragCandidate.piece.type) + '" draggable="false">';
+      ghost.style.left = cx + 'px';
+      ghost.style.top = cy + 'px';
+      document.body.appendChild(ghost);
+    }
+  }
+
+  if(isDragging && ghost){
+    ghost.style.left = cx + 'px';
+    ghost.style.top = cy + 'px';
+
+    const hoverSq = sqFromXY(cx, cy);
+    if(hoverSq !== currentHoverSq){
+      if(currentHoverSq) getSqEl(currentHoverSq)?.classList.remove('drag-over');
+      if(hoverSq && legal.includes(hoverSq)){
+        getSqEl(hoverSq)?.classList.add('drag-over');
+      }
+      currentHoverSq = hoverSq;
+    }
+  }
+}
+
+function handlePointerUp(cx, cy){
+  if(!dragCandidate) return;
+
+  if(isDragging){
+    if(ghost){ ghost.remove(); ghost = null; }
+    getSqEl(dragCandidate.sq)?.querySelector('img')?.classList.remove('dragging');
+    if(currentHoverSq){
+      getSqEl(currentHoverSq)?.classList.remove('drag-over');
+      currentHoverSq = null;
+    }
+
+    const dropSq = sqFromXY(cx, cy);
+    if(dropSq && dropSq !== dragCandidate.sq && legal.includes(dropSq)){
+      doMove(dragCandidate.sq, dropSq);
+    } else {
+      applySquareClasses();
+    }
+  }
+
+  dragCandidate = null;
+  isDragging = false;
+}
+
+document.addEventListener('mousemove', e => handlePointerMove(e.clientX, e.clientY));
+document.addEventListener('mouseup', e => { if(e.button !== 2) handlePointerUp(e.clientX, e.clientY); });
+document.addEventListener('touchmove', e => {
+  if(dragCandidate){
+    e.preventDefault();
+    handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
+  }
+}, {passive:false});
+document.addEventListener('touchend', e => {
+  if(dragCandidate){
+    const t = e.changedTouches[0];
+    handlePointerUp(t.clientX, t.clientY);
+  }
+});
 
 function clearSel(){selSq=null;legal=[];applySquareClasses()}
 
 function doMove(from,to,promo){
-  // Promotion check
   const p=chess.get(from);
   if(p&&p.type==='p'){
     const r=to[1];
-    if((playerColor==='w'&&r==='8')||(playerColor==='b'&&r==='1')){
+    const isPromoRow = (p.color==='w'&&r==='8')||(p.color==='b'&&r==='1');
+    if(isPromoRow){
       ppFrom=from;ppTo=to;clearSel();showPromo();return;
     }
   }
@@ -415,57 +614,38 @@ function doMove(from,to,promo){
   if(!mv){clearSel();return}
   lastFrom=from;lastTo=to;
   clearSel();
+  clearArrowsHL();
   renderBoard();
   snd(mv.flags&&(mv.flags.includes('c')||mv.flags.includes('e'))?'Capture':'Move');
   if(chess.in_check())sndCheck();
   updateStatus();updateMoves();
+
+  // If in P2P mode, broadcast move to friend!
+  if(gameMode === 'p2p' && p2pConn && p2pConn.open){
+    p2pConn.send({ type: 'move', from, to, promo: promo || 'q' });
+  }
+
   if(chess.game_over()){snd('GenericNotify');setTimeout(showOver,500);return}
-  engineGo();
+
+  if(gameMode === 'bot'){
+    if(analysisMode){
+      bestMove(chess.fen(), 2);
+    } else {
+      engineGo();
+    }
+  }
 }
 
-// ── Drag & drop ───────────────────────────────────────────────────────────────
-function startDrag(cx,cy,sq,piece){
-  const img=getSqEl(sq)?.querySelector('img');
-  if(!img) return;
-  img.classList.add('dragging');
-  dragFrom=sq;
-
-  ghost=document.createElement('div');
-  ghost.className='drag-ghost';
-  ghost.style.width=sqSize+'px'; ghost.style.height=sqSize+'px';
-  ghost.innerHTML='<img src="'+PIECES+(piece.color==='w'?'w':'b')+piece.type.toUpperCase()+'.svg" draggable="false">';
-  ghost.style.left=cx+'px'; ghost.style.top=cy+'px';
-  document.body.appendChild(ghost);
-
-  const onMove=e=>{
-    const ex=e.touches?e.touches[0].clientX:e.clientX;
-    const ey=e.touches?e.touches[0].clientY:e.clientY;
-    ghost.style.left=ex+'px'; ghost.style.top=ey+'px';
-  };
-  const onUp=e=>{
-    document.removeEventListener('mousemove',onMove);
-    document.removeEventListener('touchmove',onMove);
-    document.removeEventListener('mouseup',onUp);
-    document.removeEventListener('touchend',onUp);
-    ghost?.remove(); ghost=null;
-    getSqEl(dragFrom)?.querySelector('img')?.classList.remove('dragging');
-
-    const ex=e.changedTouches?e.changedTouches[0].clientX:e.clientX;
-    const ey=e.changedTouches?e.changedTouches[0].clientY:e.clientY;
-    const dropSq=sqFromXY(ex,ey);
-
-    if(dropSq&&dropSq!==dragFrom&&legal.includes(dropSq)){
-      doMove(dragFrom,dropSq);
-    } else {
-      // Snap back - re-show piece
-      applySquareClasses();
-    }
-    dragFrom=null;
-  };
-  document.addEventListener('mousemove',onMove);
-  document.addEventListener('touchmove',onMove,{passive:false});
-  document.addEventListener('mouseup',onUp);
-  document.addEventListener('touchend',onUp);
+function doRemoteMove(from, to, promo){
+  const mv=chess.move({from, to, promotion: promo || 'q'});
+  if(!mv) return;
+  lastFrom = from; lastTo = to;
+  clearArrowsHL();
+  renderBoard();
+  snd(mv.flags && (mv.flags.includes('c') || mv.flags.includes('e')) ? 'Capture' : 'Move');
+  if(chess.in_check()) sndCheck();
+  updateStatus(); updateMoves();
+  if(chess.game_over()){ snd('GenericNotify'); setTimeout(showOver, 500); }
 }
 
 function sqFromXY(x,y){
@@ -478,24 +658,32 @@ function sqFromXY(x,y){
   return 'abcdefgh'[flip?7-col:col]+(flip?row+1:8-row);
 }
 
-// ── Engine ────────────────────────────────────────────────────────────────────
+// ── Bot Turn ──────────────────────────────────────────────────────────────────
 async function engineGo(){
-  if(!engineReady) return;
+  if(!engineReady || analysisMode || gameMode === 'p2p') return;
   engineBusy=true;
   setBadge('thinking…','wait'); G('edot').className='edot bsy';
-  const best=await bestMove(chess.fen());
-  await new Promise(r=>setTimeout(r,delay+Math.random()*300));
+
+  const cfg = LEVEL_CONFIG[currentLevel] || LEVEL_CONFIG[2];
+  const best = await bestMove(chess.fen(), cfg.dp);
+
+  const legalMoves = chess.moves({ verbose: true });
+  const actualMoveStr = chooseEngineMove(legalMoves, best, cfg.blunderRate);
+
+  await new Promise(r=>setTimeout(r, cfg.dl + Math.random()*200));
   engineBusy=false; G('edot').className='edot rdy';
-  if(!best) return;
-  const from=best.slice(0,2),to=best.slice(2,4);
-  const mv=chess.move({from,to,promotion:best[4]||'q'});
-  lastFrom=from;lastTo=to;
+  if(!actualMoveStr) return;
+
+  const from=actualMoveStr.slice(0,2), to=actualMoveStr.slice(2,4);
+  const mv=chess.move({from, to, promotion: actualMoveStr[4]||'q'});
+  lastFrom=from; lastTo=to;
+  clearArrowsHL();
   renderBoard();
   snd(mv&&mv.flags&&(mv.flags.includes('c')||mv.flags.includes('e'))?'Capture':'Move');
   if(chess.in_check())sndCheck();
   updateStatus();updateMoves();
   if(chess.game_over()){snd('GenericNotify');setTimeout(showOver,500);return}
-  // Execute premove
+
   if(pmFrom){
     const pf=pmFrom,pt=pmTo; clearPremove();
     setTimeout(()=>{
@@ -512,17 +700,21 @@ function setPremove(from,to){
 }
 function clearPremove(){pmFrom=null;pmTo=null;applySquareClasses()}
 
-// ── Right-click arrows ────────────────────────────────────────────────────────
+// ── Right-click Arrows ────────────────────────────────────────────────────────
 G('bwrap').addEventListener('contextmenu',e=>e.preventDefault());
 G('bwrap').addEventListener('mousedown',e=>{
   if(e.button!==2) return;
   e.preventDefault();
-  rcFrom=sqFromXY(e.clientX,e.clientY); rcDrag=false;
+  rcFrom=sqFromXY(e.clientX,e.clientY);
+  rcDrag=false;
 });
 document.addEventListener('mousemove',e=>{
   if(!(e.buttons&2)||!rcFrom) return;
   const sq=sqFromXY(e.clientX,e.clientY);
-  if(sq&&sq!==rcFrom) rcDrag=true;
+  if(sq&&sq!==rcFrom){
+    rcDrag=true;
+    drawArrows(sq);
+  }
 });
 document.addEventListener('mouseup',e=>{
   if(e.button!==2||!rcFrom) return;
@@ -532,9 +724,14 @@ document.addEventListener('mouseup',e=>{
     const idx=arrows.findIndex(a=>a.f===rcFrom&&a.t===sq);
     if(idx!==-1) arrows.splice(idx,1); else arrows.push({f:rcFrom,t:sq});
     drawArrows();
-  } else {
-    if(rcHL[rcFrom]){delete rcHL[rcFrom];getSqEl(rcFrom)?.classList.remove('rch')}
-    else{rcHL[rcFrom]=true;getSqEl(rcFrom)?.classList.add('rch')}
+  } else if(!rcDrag && rcFrom){
+    if(rcHL[rcFrom]){
+      delete rcHL[rcFrom];
+      getSqEl(rcFrom)?.classList.remove('rch');
+    } else {
+      rcHL[rcFrom]=true;
+      getSqEl(rcFrom)?.classList.add('rch');
+    }
   }
   rcFrom=null; rcDrag=false;
 });
@@ -544,16 +741,19 @@ function clearArrowsHL(){
   rcHL={}; arrows=[]; drawArrows();
 }
 
-function drawArrows(){
+function drawArrows(previewTo = null){
   const cv=G('acanvas'),ctx=cv.getContext('2d');
   ctx.clearRect(0,0,cv.width,cv.height);
   const sz=sqSize;
-  arrows.forEach(({f,t})=>{
+
+  const renderArrow = (f, t, isPreview = false) => {
     const fc=center(f),tc=center(t);
     const dx=tc.x-fc.x,dy=tc.y-fc.y,len=Math.sqrt(dx*dx+dy*dy);
-    const ux=dx/len,uy=dy/len,hl=sz*.42,lw=sz*.13;
+    if(len < 2) return;
+    const ux=dx/len,uy=dy/len,hl=sz*.40,lw=sz*.12;
     ctx.save();
-    ctx.strokeStyle='rgba(200,50,50,.88)'; ctx.fillStyle='rgba(200,50,50,.88)';
+    const color = isPreview ? 'rgba(235, 170, 50, 0.65)' : 'rgba(230, 160, 40, 0.9)';
+    ctx.strokeStyle=color; ctx.fillStyle=color;
     ctx.lineWidth=lw; ctx.lineCap='round';
     ctx.beginPath(); ctx.moveTo(fc.x,fc.y);
     ctx.lineTo(tc.x-ux*hl*.7,tc.y-uy*hl*.7); ctx.stroke();
@@ -563,7 +763,12 @@ function drawArrows(){
     ctx.lineTo(tc.x-hl*Math.cos(a-sp),tc.y-hl*Math.sin(a-sp));
     ctx.lineTo(tc.x-hl*Math.cos(a+sp),tc.y-hl*Math.sin(a+sp));
     ctx.closePath(); ctx.fill(); ctx.restore();
-  });
+  };
+
+  arrows.forEach(({f,t})=>renderArrow(f,t,false));
+  if(rcFrom && previewTo && previewTo !== rcFrom){
+    renderArrow(rcFrom, previewTo, true);
+  }
 }
 
 function center(sq){
@@ -573,7 +778,21 @@ function center(sq){
   return{x:c*sqSize+sqSize/2,y:(7-r)*sqSize+sqSize/2};
 }
 
-// ── Navigation: back / forward with branching ─────────────────────────────────
+// ── Mod Calcul Toggle ────────────────────────────────────────────────────────
+function toggleAnalysisMode(){
+  if(gameMode === 'p2p') return;
+  analysisMode = !analysisMode;
+  if(analysisMode){
+    G('bcalc').classList.add('on');
+    setBadge('mod calcul','calc');
+  } else {
+    G('bcalc').classList.remove('on');
+    updateStatus();
+    if(chess.turn() !== playerColor) engineGo();
+  }
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
 function goBack(){
   if(vi===-1){snap=chess.history({verbose:true});vi=snap.length}
   if(vi<=0) return;
@@ -607,14 +826,10 @@ function returnToLive(){
   highlightViewMove(-1);
 }
 
-// When in view mode, user can click a move in history to jump there
-// AND continue playing from that position (branching)
 G('bwrap').addEventListener('click',e=>{
   if(viewOnlyMode&&e.target.classList.contains('sq')){
-    // clicking board in view mode starts new branch
     const sq=e.target.dataset.sq||e.target.closest('[data-sq]')?.dataset.sq;
     if(!sq) return;
-    // Branch: set chess to position at vi, then handle click
     chess=new Chess();
     for(let i=0;i<vi;i++){const m=snap[i];chess.move({from:m.from,to:m.to,promotion:m.promotion||'q'})}
     snap=chess.history({verbose:true}); vi=-1; viewOnlyMode=false;
@@ -625,11 +840,7 @@ G('bwrap').addEventListener('click',e=>{
 });
 
 function highlightViewMove(idx){
-  G('mlist').querySelectorAll('.mrow').forEach((el,i)=>{
-    const moveIdx=i*2; // rough
-    el.classList.remove('view');
-  });
-  // highlight current move pair
+  G('mlist').querySelectorAll('.mrow').forEach(el=>el.classList.remove('view'));
   if(idx===-1) return;
   const rowIdx=Math.floor((idx-1)/2);
   const rows=G('mlist').querySelectorAll('.mrow');
@@ -644,6 +855,20 @@ function setBadge(txt,cls){
 
 function updateStatus(){
   if(chess.game_over()) return;
+  if(gameMode === 'p2p'){
+    if(chess.in_check()){ setBadge('check!','chk'); }
+    else if(chess.turn()===playerColor){ setBadge('rândul tău','go'); }
+    else { setBadge('rândul prietenului','wait'); }
+    const t=chess.turn();
+    const tHost = isHost ? (t==='w') : (t==='b');
+    G('bot-bar').className='pbar'+(tHost?' active':'');
+    G('top-bar').className='pbar'+(!tHost?' active':'');
+    return;
+  }
+  if(analysisMode){
+    setBadge('mod calcul','calc');
+    return;
+  }
   if(chess.in_check()){setBadge('check!','chk')}
   else if(chess.turn()===playerColor){setBadge('your move','go')}
   else{setBadge('thinking…','wait')}
@@ -663,36 +888,66 @@ function updateMoves(){
   const ml=G('mlist'); ml.innerHTML=html; ml.scrollTop=ml.scrollHeight;
 }
 
-// ── Game over / promo ─────────────────────────────────────────────────────────
+// ── Game Over & Promotion ─────────────────────────────────────────────────────
 function showOver(){
   const won=chess.in_checkmate()&&chess.turn()!==playerColor;
   let icon,title,msg;
-  if(chess.in_checkmate()){icon=won?'🏆':'😿';title=won?'You win!':'Checkmate';msg=won?'You checkmated BLUERICA! 😺':'BLUERICA wins. 😼'}
+  if(chess.in_checkmate()){
+    icon=won?'🏆':'😿';
+    title=won?'You win!':'Checkmate';
+    msg=won ? (gameMode==='p2p'?'Ai câștigat partida! 😺':'You checkmated BLUERICA! 😺')
+            : (gameMode==='p2p'?'Ai pierdut partida. 😼':'BLUERICA wins. 😼');
+  }
   else if(chess.in_stalemate()){icon='🤝';title='Stalemate';msg='Draw!'}
   else{icon='½';title='Draw';msg='The game ended in a draw.'}
+
   G('mg').textContent=icon; G('mt').textContent=title; G('mm').textContent=msg;
+  G('mnew').textContent = gameMode==='p2p' ? 'Cere Revanșă' : 'Play Again';
   G('ov').classList.add('show');
 }
 
 function showPromo(){
-  const c=playerColor,row=G('prow'); row.innerHTML='';
-  ['Q','R','B','N'].forEach(t=>{
+  const c=chess.turn();
+  const row=G('prow'); row.innerHTML='';
+  ['q','r','b','n'].forEach(t=>{
     const sq=document.createElement('div'); sq.className='psq';
-    sq.innerHTML='<img src="'+PIECES+c+t+'.svg" alt="'+t+'">';
+    sq.innerHTML='<img src="'+getPieceUrl(c,t)+'" alt="'+t+'">';
     sq.addEventListener('click',()=>{
       G('pov').classList.remove('show');
-      if(ppFrom){const mv=chess.move({from:ppFrom,to:ppTo,promotion:t.toLowerCase()});ppFrom=null;ppTo=null;if(mv){lastFrom=mv.from;lastTo=mv.to;renderBoard();snd('Move');updateStatus();updateMoves();if(!chess.game_over())engineGo();else{snd('GenericNotify');setTimeout(showOver,500)}}}
+      if(ppFrom){
+        const mv=chess.move({from:ppFrom,to:ppTo,promotion:t});
+        const fromSq=ppFrom, toSq=ppTo;
+        ppFrom=null;ppTo=null;
+        if(mv){
+          lastFrom=mv.from;lastTo=mv.to;
+          clearArrowsHL();
+          renderBoard();
+          snd('Move');
+          updateStatus();updateMoves();
+
+          if(gameMode === 'p2p' && p2pConn && p2pConn.open){
+            p2pConn.send({ type: 'move', from: fromSq, to: toSq, promo: t });
+          }
+
+          if(!chess.game_over()){
+            if(gameMode === 'bot' && !analysisMode) engineGo();
+          } else {
+            snd('GenericNotify');setTimeout(showOver,500);
+          }
+        }
+      }
     });
     row.appendChild(sq);
   });
   G('pov').classList.add('show');
 }
 
-// ── Hint ──────────────────────────────────────────────────────────────────────
+// ── Hint & Reactions ──────────────────────────────────────────────────────────
 async function doHint(){
-  if(!engineReady||engineBusy||viewOnlyMode||chess.turn()!==playerColor) return;
+  if(gameMode==='p2p') return;
+  if(!engineReady||engineBusy||viewOnlyMode) return;
   G('bhint').disabled=true; G('bhint').textContent='⏳';
-  const best=await bestMove(chess.fen());
+  const best=await bestMove(chess.fen(), 3);
   G('bhint').disabled=false; G('bhint').textContent='💡 Hint';
   if(!best) return;
   const f=best.slice(0,2),t=best.slice(2,4);
@@ -700,51 +955,295 @@ async function doHint(){
   setTimeout(()=>{getSqEl(f)?.classList.remove('ehi');getSqEl(t)?.classList.remove('ehi')},2000);
 }
 
-// ── New game ──────────────────────────────────────────────────────────────────
+function spawnReaction(emoji){
+  const el = document.createElement('div');
+  el.className = 'toast-reaction';
+  el.textContent = emoji;
+  G('bwrap').appendChild(el);
+  setTimeout(() => el.remove(), 1300);
+}
+
+// ── New Game ──────────────────────────────────────────────────────────────────
 function newGame(){
   chess=new Chess(); snap=[]; vi=-1; viewOnlyMode=false;
   selSq=null; legal=[]; lastFrom=null; lastTo=null;
   pmFrom=null; pmTo=null; rcHL={}; arrows=[];
   engineBusy=false;
+  if(analysisMode) toggleAnalysisMode();
   G('ov').classList.remove('show');
   setEval(0); updateMoves();
-  G('top-name').textContent=playerColor==='w'?'BLUERICA':'You';
-  G('bot-name').textContent=playerColor==='w'?'You':'BLUERICA';
+
+  if(gameMode === 'p2p'){
+    G('top-name').textContent = isHost ? 'Prieten (Negre)' : 'Prieten (Albe)';
+    G('bot-name').textContent = isHost ? 'Tu (Albe)' : 'Tu (Negre)';
+  } else {
+    G('top-name').textContent=playerColor==='w'?'BLUERICA':'You';
+    G('bot-name').textContent=playerColor==='w'?'You':'BLUERICA';
+  }
+
   renderBoard();
   updateStatus();
-  if(playerColor==='b') engineGo();
+  if(gameMode === 'bot' && playerColor==='b') engineGo();
 }
 
-// ── Controls ──────────────────────────────────────────────────────────────────
+// ── P2P Multiplayer (WebRTC / PeerJS) ─────────────────────────────────────────
+function setGameMode(mode){
+  gameMode = mode;
+  if(mode === 'p2p'){
+    G('m-p2p').classList.add('on');
+    G('m-bot').classList.remove('on');
+    G('p2p-panel').style.display = 'block';
+    G('panel-difficulty').style.display = 'none';
+    G('panel-playas').style.display = 'none';
+    G('bcalc').style.display = 'none';
+    G('bhint').style.display = 'none';
+    setBadge('mod p2p','p2p');
+  } else {
+    G('m-bot').classList.add('on');
+    G('m-p2p').classList.remove('on');
+    G('p2p-panel').style.display = 'none';
+    G('panel-difficulty').style.display = 'block';
+    G('panel-playas').style.display = 'block';
+    G('bcalc').style.display = 'inline-block';
+    G('bhint').style.display = 'inline-block';
+    closeP2P();
+    playerColor = G('bw').classList.contains('on') ? 'w' : 'b';
+    newGame();
+  }
+}
+
+function generateRoomId(){
+  return 'roki-' + Math.random().toString(36).substring(2, 7);
+}
+
+function initP2PHost(){
+  closeP2P();
+  isHost = true;
+  playerColor = 'w';
+  p2pRoomId = generateRoomId();
+
+  G('p2p-code-display').textContent = p2pRoomId;
+  G('p2p-idle').style.display = 'none';
+  G('p2p-active').style.display = 'flex';
+  G('p2p-status-badge').textContent = '⏳ Așteptare prieten…';
+
+  const shareUrl = window.location.origin + window.location.pathname + '#room=' + p2pRoomId;
+  G('p2p-wa-btn').href = 'https://api.whatsapp.com/send?text=' + encodeURIComponent('Hai să jucăm o partidă de șah! Deschide linkul: ' + shareUrl);
+
+  peer = new Peer(p2pRoomId, { debug: 1 });
+
+  peer.on('open', id => {
+    setBadge('cameră deschisă','p2p');
+  });
+
+  peer.on('connection', conn => {
+    p2pConn = conn;
+    setupConnectionHandlers();
+    conn.on('open', () => {
+      conn.send({ type: 'init', fen: chess.fen(), hostColor: 'w' });
+      onPeerConnected();
+    });
+  });
+
+  peer.on('error', err => {
+    console.error('Peer error:', err);
+    alert('Eroare conexiune cameră: ' + err.type);
+    closeP2P();
+  });
+
+  newGame();
+}
+
+function joinP2PRoom(roomId){
+  closeP2P();
+  isHost = false;
+  playerColor = 'b';
+  p2pRoomId = roomId;
+
+  setGameMode('p2p');
+  G('p2p-code-display').textContent = p2pRoomId;
+  G('p2p-idle').style.display = 'none';
+  G('p2p-active').style.display = 'flex';
+  G('p2p-status-badge').textContent = '⏳ Te conectezi la cameră…';
+
+  peer = new Peer({ debug: 1 });
+
+  peer.on('open', () => {
+    const conn = peer.connect(roomId);
+    p2pConn = conn;
+    setupConnectionHandlers();
+    conn.on('open', () => {
+      onPeerConnected();
+    });
+  });
+
+  peer.on('error', err => {
+    console.error('Peer join error:', err);
+    alert('Nu s-a putut conecta la cameră: ' + roomId);
+    closeP2P();
+  });
+
+  newGame();
+}
+
+function setupConnectionHandlers(){
+  if(!p2pConn) return;
+
+  p2pConn.on('data', data => {
+    if(!data) return;
+    if(data.type === 'init'){
+      playerColor = data.hostColor === 'w' ? 'b' : 'w';
+      newGame();
+      onPeerConnected();
+    } else if(data.type === 'move'){
+      doRemoteMove(data.from, data.to, data.promo);
+    } else if(data.type === 'reaction'){
+      spawnReaction(data.emoji);
+    } else if(data.type === 'resign'){
+      snd('GenericNotify');
+      G('mg').textContent = '🏆';
+      G('mt').textContent = 'Ai câștigat!';
+      G('mm').textContent = 'Prietenul tău a cedat meciul.';
+      G('ov').classList.add('show');
+    } else if(data.type === 'rematch_req'){
+      if(confirm('Prietenul tău vrea o revanșă! Accepti?')){
+        p2pConn.send({ type: 'rematch_accept' });
+        playerColor = playerColor === 'w' ? 'b' : 'w';
+        newGame();
+      }
+    } else if(data.type === 'rematch_accept'){
+      alert('Revanșă acceptată! Schimbăm culorile.');
+      playerColor = playerColor === 'w' ? 'b' : 'w';
+      newGame();
+    }
+  });
+
+  p2pConn.on('close', () => {
+    alert('Prietenul tău s-a deconectat.');
+    G('p2p-status-badge').textContent = '⚠️ Prieten deconectat';
+    G('p2p-reactions').style.display = 'none';
+  });
+}
+
+function onPeerConnected(){
+  G('p2p-status-badge').textContent = '🟢 Prieten conectat!';
+  G('p2p-reactions').style.display = 'flex';
+  setBadge('meci activ','go');
+  updateStatus();
+}
+
+function closeP2P(){
+  if(p2pConn){ p2pConn.close(); p2pConn = null; }
+  if(peer){ peer.destroy(); peer = null; }
+  G('p2p-idle').style.display = 'block';
+  G('p2p-active').style.display = 'none';
+  G('p2p-reactions').style.display = 'none';
+  window.location.hash = '';
+}
+
+// ── Controls & Event Listeners ────────────────────────────────────────────────
+G('t-classic').addEventListener('click', () => {
+  currentPieceTheme = 'classic';
+  localStorage.setItem('bl_theme', 'classic');
+  updateThemeUI();
+  renderBoard();
+});
+
+G('t-cburnett').addEventListener('click', () => {
+  currentPieceTheme = 'cburnett';
+  localStorage.setItem('bl_theme', 'cburnett');
+  updateThemeUI();
+  renderBoard();
+});
+
+G('m-bot').addEventListener('click', () => setGameMode('bot'));
+G('m-p2p').addEventListener('click', () => setGameMode('p2p'));
+G('p2p-create').addEventListener('click', initP2PHost);
+G('p2p-join').addEventListener('click', () => {
+  const code = G('p2p-code-in').value.trim();
+  if(code) joinP2PRoom(code);
+});
+G('p2p-leave').addEventListener('click', () => {
+  closeP2P();
+  setGameMode('bot');
+});
+G('p2p-copy-btn').addEventListener('click', () => {
+  const shareUrl = window.location.origin + window.location.pathname + '#room=' + p2pRoomId;
+  navigator.clipboard.writeText(shareUrl).then(() => {
+    const b = G('p2p-copy-btn');
+    const old = b.textContent;
+    b.textContent = '✓ Copiat în clipboard!';
+    setTimeout(() => b.textContent = old, 1800);
+  });
+});
+
+document.querySelectorAll('.p2p-reac').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const emo = btn.dataset.emo;
+    spawnReaction(emo);
+    if(p2pConn && p2pConn.open){
+      p2pConn.send({ type: 'reaction', emoji: emo });
+    }
+  });
+});
+
 // Restore saved level
 (function(){
-  const s=localStorage.getItem('bl');
+  const s = localStorage.getItem('bl_lvl');
   if(s){
-    const b=document.querySelector('.db[data-sk="'+s+'"]');
-    if(b){document.querySelectorAll('.db').forEach(x=>x.classList.remove('on'));b.classList.add('on');skill=+b.dataset.sk;depth=+b.dataset.dp;delay=+b.dataset.dl}
+    const b = document.querySelector(`.db[data-lvl="${s}"]`);
+    if(b){
+      document.querySelectorAll('.db[data-lvl]').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      currentLevel = parseInt(s);
+    }
   }
+  updateThemeUI();
 })();
 
-document.querySelectorAll('.db').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('.db').forEach(x=>x.classList.remove('on'));
-  b.classList.add('on'); skill=+b.dataset.sk; depth=+b.dataset.dp; delay=+b.dataset.dl;
-  localStorage.setItem('bl',b.dataset.sk);
-}));
+document.querySelectorAll('.db[data-lvl]').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.db[data-lvl]').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    currentLevel = parseInt(b.dataset.lvl);
+    localStorage.setItem('bl_lvl', currentLevel);
+  });
+});
 
 G('bw').addEventListener('click',()=>{G('bw').classList.add('on');G('bb').classList.remove('on');playerColor='w';newGame()});
 G('bb').addEventListener('click',()=>{G('bb').classList.add('on');G('bw').classList.remove('on');playerColor='b';newGame()});
 G('ngame').addEventListener('click',newGame);
-G('mnew').addEventListener('click',newGame);
+G('mnew').addEventListener('click',()=>{
+  if(gameMode === 'p2p' && p2pConn && p2pConn.open){
+    p2pConn.send({ type: 'rematch_req' });
+    alert('Cerere de revanșă trimisă prietenului!');
+    G('ov').classList.remove('show');
+  } else {
+    newGame();
+  }
+});
 G('bbk').addEventListener('click',goBack);
 G('bfw').addEventListener('click',goFwd);
+G('bcalc').addEventListener('click',toggleAnalysisMode);
 G('bhint').addEventListener('click',doHint);
 G('bres').addEventListener('click',()=>{
   if(chess.game_over()||!confirm('Resign?')) return;
+  if(gameMode === 'p2p' && p2pConn && p2pConn.open){
+    p2pConn.send({ type: 'resign' });
+  }
   snd('GenericNotify');G('mg').textContent='🏳';G('mt').textContent='You resigned';G('mm').textContent='BLUERICA wins. 😼';G('ov').classList.add('show');
 });
 
-// Resize
+// Window resize
 window.addEventListener('resize',()=>{renderBoard();drawArrows()});
+
+// Check if user arrived via invitation hash
+window.addEventListener('DOMContentLoaded', () => {
+  if(window.location.hash.startsWith('#room=')){
+    const target = window.location.hash.replace('#room=','').trim();
+    if(target) joinP2PRoom(target);
+  }
+});
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 initEngine();
