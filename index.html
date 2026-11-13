@@ -201,7 +201,7 @@ body.focus-mode .board-actions{max-width:640px}
 
     <!-- Piece Style Selector -->
     <div class="panel">
-      <div class="ph">Piese / Piece Style</div>
+      <div class="ph">Piece Style</div>
       <div class="pb"><div class="crow">
         <button class="cb on" id="t-classic">♟ Classic</button>
         <button class="cb"    id="t-cburnett">♚ Modern</button>
@@ -210,26 +210,26 @@ body.focus-mode .board-actions{max-width:640px}
 
     <!-- Board Color Theme (Wood / Dark / Green) -->
     <div class="panel">
-      <div class="ph">Culoare Tablă / Board</div>
+      <div class="ph">Board Theme</div>
       <div class="pb"><div class="crow">
-        <button class="cb on" id="btheme-wood">🪵 Lemn</button>
+        <button class="cb on" id="btheme-wood">🪵 Wood</button>
         <button class="cb"    id="btheme-dark">🌑 Dark</button>
-        <button class="cb"    id="btheme-green">🌿 Verde</button>
+        <button class="cb"    id="btheme-green">🌿 Green</button>
       </div></div>
     </div>
 
     <!-- Game Mode (Bot vs Friend) -->
     <div class="panel">
-      <div class="ph">Mod Joc</div>
+      <div class="ph">Game Mode</div>
       <div class="pb"><div class="crow">
         <button class="cb on" id="m-bot">🤖 vs Bot</button>
-        <button class="cb"    id="m-p2p">👥 vs Prieten</button>
+        <button class="cb"    id="m-p2p">👥 vs Friend</button>
       </div></div>
     </div>
 
     <!-- 6 Levels of Difficulty -->
     <div class="panel" id="panel-difficulty">
-      <div class="ph">Dificultate Engine</div>
+      <div class="ph">Bot Difficulty</div>
       <div class="pb"><div class="dgrid6">
         <button class="db"    data-lvl="1">1<span class="ds2">Newbie<br>500</span></button>
         <button class="db on" data-lvl="2">2<span class="ds2">Beginner<br>800</span></button>
@@ -242,10 +242,10 @@ body.focus-mode .board-actions{max-width:640px}
 
     <!-- Play as White / Black -->
     <div class="panel" id="panel-playas">
-      <div class="ph">Joci cu / Play As</div>
+      <div class="ph">Play As</div>
       <div class="pb"><div class="crow">
-        <button class="cb wc on" id="bw">⬜ Albele</button>
-        <button class="cb bc"    id="bb">⬛ Negrele</button>
+        <button class="cb wc on" id="bw">⬜ White</button>
+        <button class="cb bc"    id="bb">⬛ Black</button>
       </div></div>
     </div>
   </aside>
@@ -261,12 +261,12 @@ body.focus-mode .board-actions{max-width:640px}
 
     <!-- Action buttons directly below the board -->
     <div class="board-actions">
-      <button class="abtn" id="bbk" title="Mutarea anterioară">◀ Înapoi</button>
-      <button class="abtn" id="bfw" title="Mutarea următoare">Înainte ▶</button>
-      <button class="abtn" id="bcalc" title="Calculează liber mutări pentru ambele părți">🧠 Mod Calcul</button>
-      <button class="abtn hbtn" id="bhint" title="Sugestie">💡 Hint</button>
-      <button class="abtn rbtn" id="bres" title="Cedează partida">🏳 Resign</button>
-      <button class="nbtn-sm" id="ngame" title="Partidă Nouă">🔄 Joc Nou</button>
+      <button class="abtn" id="bbk" title="Previous move">◀ Back</button>
+      <button class="abtn" id="bfw" title="Next move">Forward ▶</button>
+      <button class="abtn" id="bcalc" title="Free play analysis mode for both sides">🧠 Analysis</button>
+      <button class="abtn hbtn" id="bhint" title="Move suggestion">💡 Hint</button>
+      <button class="abtn rbtn" id="bres" title="Resign game">🏳 Resign</button>
+      <button class="nbtn-sm" id="ngame" title="New Game">🔄 New Game</button>
     </div>
   </section>
 
@@ -274,7 +274,7 @@ body.focus-mode .board-actions{max-width:640px}
   <aside class="side-col right-col" id="col-right">
     <!-- Live Eval Bar -->
     <div class="panel">
-      <div class="ph">Evaluare Poziție</div>
+      <div class="ph">Position Eval</div>
       <div class="pb" style="padding:10px 14px">
         <div class="eval-row">
           <div class="eval-bar"><div class="eval-fill" id="efill"></div></div>
@@ -285,20 +285,20 @@ body.focus-mode .board-actions{max-width:640px}
 
     <!-- P2P Room Panel (Multiplayer) -->
     <div class="panel" id="p2p-panel" style="display:none">
-      <div class="ph">Cameră Prieteni (P2P)</div>
+      <div class="ph">Play vs Friend (P2P)</div>
       <div class="pb" style="display:flex;flex-direction:column;gap:8px">
         <div id="p2p-idle">
-          <button class="nbtn" id="p2p-create" style="background:#5ea87a;margin-bottom:8px">🟢 Creează Cameră</button>
+          <button class="nbtn" id="p2p-create" style="background:#5ea87a;margin-bottom:8px">🟢 Create Room</button>
           <div style="display:flex;gap:4px">
-            <input type="text" id="p2p-code-in" placeholder="Cod cameră…" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:7px 8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.7rem">
-            <button class="abtn" id="p2p-join" style="padding:7px 12px">Intră</button>
+            <input type="text" id="p2p-code-in" placeholder="Room code…" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:7px 8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.7rem">
+            <button class="abtn" id="p2p-join" style="padding:7px 12px">Join</button>
           </div>
         </div>
         <div id="p2p-active" style="display:none;flex-direction:column;gap:8px">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted)">Cod: <strong id="p2p-code-display" style="color:var(--accent);font-size:.82rem"></strong></div>
-          <div id="p2p-status-badge" style="font-size:.68rem;color:var(--accent);font-family:'JetBrains Mono',monospace">⏳ Așteptare prieten…</div>
-          <button class="abtn" id="p2p-copy-btn">📋 Copiază Link Invitație</button>
-          <a id="p2p-wa-btn" target="_blank" class="abtn" style="text-align:center;text-decoration:none;display:block;border-color:#25d366;color:#25d366">💬 Trimite pe WhatsApp</a>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted)">Room Code: <strong id="p2p-code-display" style="color:var(--accent);font-size:.82rem"></strong></div>
+          <div id="p2p-status-badge" style="font-size:.68rem;color:var(--accent);font-family:'JetBrains Mono',monospace">⏳ Waiting for friend…</div>
+          <button class="abtn" id="p2p-copy-btn">📋 Copy Invite Link</button>
+          <a id="p2p-wa-btn" target="_blank" class="abtn" style="text-align:center;text-decoration:none;display:block;border-color:#25d366;color:#25d366">💬 Share on WhatsApp</a>
           <div class="crow" id="p2p-reactions" style="display:none;margin-top:4px">
             <button class="abtn p2p-reac" data-emo="👏">👏</button>
             <button class="abtn p2p-reac" data-emo="🤝">🤝</button>
@@ -306,14 +306,14 @@ body.focus-mode .board-actions{max-width:640px}
             <button class="abtn p2p-reac" data-emo="🔥">🔥</button>
             <button class="abtn p2p-reac" data-emo="❤️">❤️</button>
           </div>
-          <button class="abtn rbtn" id="p2p-leave" style="margin-top:4px">❌ Închide Camera</button>
+          <button class="abtn rbtn" id="p2p-leave" style="margin-top:4px">❌ Leave Room</button>
         </div>
       </div>
     </div>
 
     <!-- Move History List -->
     <div class="panel" style="display:flex;flex-direction:column">
-      <div class="ph">Istoric Mutări</div>
+      <div class="ph">Move History</div>
       <div class="pb" style="padding:8px 12px">
         <div class="mlist" id="mlist"><div class="emp">— no moves yet —</div></div>
       </div>
@@ -802,7 +802,7 @@ function sqFromXY(x,y){
 async function engineGo(){
   if(!engineReady || analysisMode || gameMode === 'p2p') return;
   engineBusy=true;
-  setBadge('gândește…','wait'); G('edot').className='edot bsy';
+  setBadge('thinking…','wait'); G('edot').className='edot bsy';
 
   const cfg = LEVEL_CONFIG[currentLevel] || LEVEL_CONFIG[2];
   const best = await bestMove(chess.fen(), cfg.dp);
@@ -982,7 +982,7 @@ function toggleAnalysisMode(){
   analysisMode = !analysisMode;
   if(analysisMode){
     G('bcalc').classList.add('on');
-    setBadge('mod calcul','calc');
+    setBadge('analysis','calc');
   } else {
     G('bcalc').classList.remove('on');
     updateStatus();
@@ -1079,8 +1079,8 @@ function updateStatus(){
   if(chess.game_over()) return;
   if(gameMode === 'p2p'){
     if(chess.in_check()){ setBadge('check!','chk'); }
-    else if(chess.turn()===playerColor){ setBadge('rândul tău','go'); }
-    else { setBadge('rândul prietenului','wait'); }
+    else if(chess.turn()===playerColor){ setBadge('your move','go'); }
+    else { setBadge('friend\x27s move','wait'); }
     const t=chess.turn();
     const tHost = isHost ? (t==='w') : (t==='b');
     G('bot-bar').className='pbar'+(tHost?' active':'');
@@ -1088,12 +1088,12 @@ function updateStatus(){
     return;
   }
   if(analysisMode){
-    setBadge('mod calcul','calc');
+    setBadge('analysis','calc');
     return;
   }
   if(chess.in_check()){setBadge('check!','chk')}
-  else if(chess.turn()===playerColor){setBadge('rândul tău','go')}
-  else{setBadge('gândește…','wait')}
+  else if(chess.turn()===playerColor){setBadge('your move','go')}
+  else{setBadge('thinking…','wait')}
   const t=chess.turn(),tEng=playerColor==='w';
   G('top-bar').className='pbar'+((tEng?t==='b':t==='w')?' active':'');
   G('bot-bar').className='pbar'+((tEng?t==='w':t==='b')?' active':'');
@@ -1117,14 +1117,14 @@ function showOver(){
   if(chess.in_checkmate()){
     icon=won?'🏆':'😿';
     title=won?'You win!':'Checkmate';
-    msg=won ? (gameMode==='p2p'?'Ai câștigat partida! 😺':'You checkmated BLUERICA! 😺')
-            : (gameMode==='p2p'?'Ai pierdut partida. 😼':'BLUERICA wins. 😼');
+    msg=won ? (gameMode==='p2p'?'You won the match! 😺':'You checkmated BLUERICA! 😺')
+            : (gameMode==='p2p'?'You lost the match. 😼':'BLUERICA wins. 😼');
   }
   else if(chess.in_stalemate()){icon='🤝';title='Stalemate';msg='Draw!'}
   else{icon='½';title='Draw';msg='The game ended in a draw.'}
 
   G('mg').textContent=icon; G('mt').textContent=title; G('mm').textContent=msg;
-  G('mnew').textContent = gameMode==='p2p' ? 'Cere Revanșă' : 'Play Again';
+  G('mnew').textContent = gameMode==='p2p' ? 'Request Rematch' : 'Play Again';
   G('ov').classList.add('show');
 }
 
@@ -1196,8 +1196,8 @@ function newGame(){
   setEval(0); updateMoves();
 
   if(gameMode === 'p2p'){
-    G('top-name').textContent = isHost ? 'Prieten (Negre)' : 'Prieten (Albe)';
-    G('bot-name').textContent = isHost ? 'Tu (Albe)' : 'Tu (Negre)';
+    G('top-name').textContent = isHost ? 'Friend (Black)' : 'Friend (White)';
+    G('bot-name').textContent = isHost ? 'You (White)' : 'You (Black)';
   } else {
     G('top-name').textContent=playerColor==='w'?'BLUERICA':'You';
     G('bot-name').textContent=playerColor==='w'?'You':'BLUERICA';
@@ -1219,7 +1219,7 @@ function setGameMode(mode){
     G('panel-playas').style.display = 'none';
     G('bcalc').style.display = 'none';
     G('bhint').style.display = 'none';
-    setBadge('mod p2p','p2p');
+    setBadge('p2p mode','p2p');
   } else {
     G('m-bot').classList.add('on');
     G('m-p2p').classList.remove('on');
@@ -1247,15 +1247,15 @@ function initP2PHost(){
   G('p2p-code-display').textContent = p2pRoomId;
   G('p2p-idle').style.display = 'none';
   G('p2p-active').style.display = 'flex';
-  G('p2p-status-badge').textContent = '⏳ Așteptare prieten…';
+  G('p2p-status-badge').textContent = '⏳ Waiting for friend…';
 
   const shareUrl = window.location.origin + window.location.pathname + '#room=' + p2pRoomId;
-  G('p2p-wa-btn').href = 'https://api.whatsapp.com/send?text=' + encodeURIComponent('Hai să jucăm o partidă de șah! Deschide linkul: ' + shareUrl);
+  G('p2p-wa-btn').href = 'https://api.whatsapp.com/send?text=' + encodeURIComponent('Let\x27s play a game of chess! Join room: ' + shareUrl);
 
   peer = new Peer(p2pRoomId, { debug: 1 });
 
   peer.on('open', id => {
-    setBadge('cameră deschisă','p2p');
+    setBadge('room open','p2p');
   });
 
   peer.on('connection', conn => {
@@ -1269,7 +1269,7 @@ function initP2PHost(){
 
   peer.on('error', err => {
     console.error('Peer error:', err);
-    alert('Eroare conexiune cameră: ' + err.type);
+    alert('Room connection error: ' + err.type);
     closeP2P();
   });
 
@@ -1286,7 +1286,7 @@ function joinP2PRoom(roomId){
   G('p2p-code-display').textContent = p2pRoomId;
   G('p2p-idle').style.display = 'none';
   G('p2p-active').style.display = 'flex';
-  G('p2p-status-badge').textContent = '⏳ Te conectezi la cameră…';
+  G('p2p-status-badge').textContent = '⏳ Connecting to room…';
 
   peer = new Peer({ debug: 1 });
 
@@ -1301,7 +1301,7 @@ function joinP2PRoom(roomId){
 
   peer.on('error', err => {
     console.error('Peer join error:', err);
-    alert('Nu s-a putut conecta la cameră: ' + roomId);
+    alert('Could not connect to room: ' + roomId);
     closeP2P();
   });
 
@@ -1324,33 +1324,33 @@ function setupConnectionHandlers(){
     } else if(data.type === 'resign'){
       snd('GenericNotify');
       G('mg').textContent = '🏆';
-      G('mt').textContent = 'Ai câștigat!';
-      G('mm').textContent = 'Prietenul tău a cedat meciul.';
+      G('mt').textContent = 'You won!';
+      G('mm').textContent = 'Your friend resigned.';
       G('ov').classList.add('show');
     } else if(data.type === 'rematch_req'){
-      if(confirm('Prietenul tău vrea o revanșă! Accepti?')){
+      if(confirm('Your friend wants a rematch! Accept?')){
         p2pConn.send({ type: 'rematch_accept' });
         playerColor = playerColor === 'w' ? 'b' : 'w';
         newGame();
       }
     } else if(data.type === 'rematch_accept'){
-      alert('Revanșă acceptată! Schimbăm culorile.');
+      alert('Rematch accepted! Switching colors.');
       playerColor = playerColor === 'w' ? 'b' : 'w';
       newGame();
     }
   });
 
   p2pConn.on('close', () => {
-    alert('Prietenul tău s-a deconectat.');
-    G('p2p-status-badge').textContent = '⚠️ Prieten deconectat';
+    alert('Your friend disconnected.');
+    G('p2p-status-badge').textContent = '⚠️ Friend disconnected';
     G('p2p-reactions').style.display = 'none';
   });
 }
 
 function onPeerConnected(){
-  G('p2p-status-badge').textContent = '🟢 Prieten conectat!';
+  G('p2p-status-badge').textContent = '🟢 Friend connected!';
   G('p2p-reactions').style.display = 'flex';
-  setBadge('meci activ','go');
+  setBadge('game active','go');
   updateStatus();
 }
 
@@ -1399,7 +1399,7 @@ G('p2p-copy-btn').addEventListener('click', () => {
   navigator.clipboard.writeText(shareUrl).then(() => {
     const b = G('p2p-copy-btn');
     const old = b.textContent;
-    b.textContent = '✓ Copiat!';
+    b.textContent = '✓ Copied!';
     setTimeout(() => b.textContent = old, 1800);
   });
 });
@@ -1457,7 +1457,7 @@ G('ngame').addEventListener('click',newGame);
 G('mnew').addEventListener('click',()=>{
   if(gameMode === 'p2p' && p2pConn && p2pConn.open){
     p2pConn.send({ type: 'rematch_req' });
-    alert('Cerere de revanșă trimisă prietenului!');
+    alert('Rematch request sent to friend!');
     G('ov').classList.remove('show');
   } else {
     newGame();
