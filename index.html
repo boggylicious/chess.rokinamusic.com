@@ -69,7 +69,7 @@ main{display:flex;flex-wrap:nowrap;justify-content:center;align-items:stretch;ga
 .sq.lmf{background:rgba(200,164,90,0.28)!important}
 .sq.lmt{background:rgba(200,164,90,0.5)!important}
 .sq.rch{background:rgba(255,170,0,0.42)!important}
-.sq.pre{background:rgba(100,180,255,0.38)!important}
+.sq.pre{background:rgba(56,140,240,0.45)!important;box-shadow:inset 0 0 0 3px rgba(56,140,240,0.9)!important}
 .sq.ehi{box-shadow:inset 0 0 0 4px rgba(100,200,100,0.9)!important}
 .sq.drag-over{box-shadow:inset 0 0 0 4px rgba(255,255,255,0.85)!important}
 
@@ -831,7 +831,26 @@ function applySquareClasses(){
   if(pmFrom){getSqEl(pmFrom)?.classList.add('pre');getSqEl(pmTo)?.classList.add('pre')}
 }
 
-// ── Piece Interaction (Smooth Drag-and-Drop & Click-to-Move) ───────────────────
+// ── Piece Interaction (Smooth Drag-and-Drop & Click-to-Move with Premove) ────
+function isOpponentTurn(){
+  if(analysisMode || chess.game_over() || viewOnlyMode) return false;
+  if(gameMode === 'bot') return engineBusy || chess.turn() !== playerColor;
+  if(gameMode === 'p2p') return chess.turn() !== playerColor;
+  return false;
+}
+
+function getPremoveCandidates(sq){
+  try {
+    const tokens = chess.fen().split(' ');
+    tokens[1] = playerColor;
+    tokens[3] = '-';
+    const tempChess = new Chess(tokens.join(' '));
+    return tempChess.moves({ square: sq, verbose: true }).map(m => m.to);
+  } catch(e) {
+    return [];
+  }
+}
+
 function isAllowedToMove(piece){
   if(analysisMode) return piece && piece.color === chess.turn();
   if(gameMode === 'p2p') return piece && piece.color === playerColor && chess.turn() === playerColor;
@@ -839,9 +858,13 @@ function isAllowedToMove(piece){
 }
 
 function onPointerDown(e, sq, isTouch){
-  // Right-click handling: capture immediately with the clicked square
+  // Right-click handling: cancel premove or capture arrows/highlights
   if(!isTouch && e.button === 2){
     e.preventDefault();
+    if(pmFrom){
+      clearPremove();
+      return;
+    }
     isRightClicking = true;
     rcFrom = sq;
     rcCurrent = sq;
@@ -864,26 +887,47 @@ function onPointerDown(e, sq, isTouch){
   if(chess.game_over()) return;
   if(viewOnlyMode){ returnToLive(); return; }
 
-  // Premove / wait in bot mode
-  if(gameMode === 'bot' && !analysisMode && (engineBusy || chess.turn() !== playerColor)){
-    const p = chess.get(sq);
+  const p = chess.get(sq);
+
+  // ── PREMOVE MODE (During opponent's turn in Bot or P2P) ──────────────────────
+  if(isOpponentTurn()){
     if(selSq){
-      const sp = chess.get(selSq);
-      if(sp && sp.color === playerColor){
-        setPremove(selSq, sq); clearSel(); return;
+      if(sq === selSq){
+        clearSel();
+        return;
       }
+      if(p && p.color === playerColor){
+        // Switched to another of own pieces
+        selSq = sq;
+        legal = getPremoveCandidates(sq);
+        applySquareClasses();
+        startDragCandidate(clientX, clientY, sq, p);
+        return;
+      }
+      // Clicked destination square: set premove!
+      setPremove(selSq, sq);
+      return;
     }
+
     if(p && p.color === playerColor){
-      selSq = sq; legal = []; applySquareClasses();
+      if(pmFrom) clearPremove();
+      selSq = sq;
+      legal = getPremoveCandidates(sq);
+      applySquareClasses();
+      startDragCandidate(clientX, clientY, sq, p);
+      return;
     }
+
+    // Clicked empty square / opponent piece without selection
+    if(pmFrom) clearPremove();
+    clearSel();
     return;
   }
 
-  // If already selected
+  // ── NORMAL TURN (Your Turn) ─────────────────────────────────────────────────
   if(selSq){
     if(sq === selSq){ clearSel(); return; }
     if(legal.includes(sq)){ doMove(selSq, sq); return; }
-    const p = chess.get(sq);
     if(isAllowedToMove(p)){
       selSq = sq;
       legal = chess.moves({square: sq, verbose: true}).map(m => m.to);
@@ -896,12 +940,12 @@ function onPointerDown(e, sq, isTouch){
     return;
   }
 
-  const p = chess.get(sq);
-  if(isAllowedToMove(p)){
+  const pNormal = chess.get(sq);
+  if(isAllowedToMove(pNormal)){
     selSq = sq;
     legal = chess.moves({square: sq, verbose: true}).map(m => m.to);
     applySquareClasses();
-    startDragCandidate(clientX, clientY, sq, p);
+    startDragCandidate(clientX, clientY, sq, pNormal);
   } else {
     if(Object.keys(rcHL).length > 0 || arrows.length > 0) clearArrowsHL();
   }
@@ -942,7 +986,8 @@ function handlePointerMove(cx, cy){
     const hoverSq = sqFromXY(cx, cy);
     if(hoverSq !== currentHoverSq){
       if(currentHoverSq) getSqEl(currentHoverSq)?.classList.remove('drag-over');
-      if(hoverSq && legal.includes(hoverSq)){
+      const isCandidate = isOpponentTurn() ? (hoverSq !== dragCandidate.sq) : (hoverSq && legal.includes(hoverSq));
+      if(hoverSq && isCandidate){
         getSqEl(hoverSq)?.classList.add('drag-over');
       }
       currentHoverSq = hoverSq;
@@ -962,8 +1007,14 @@ function handlePointerUp(cx, cy){
     }
 
     const dropSq = sqFromXY(cx, cy);
-    if(dropSq && dropSq !== dragCandidate.sq && legal.includes(dropSq)){
-      doMove(dragCandidate.sq, dropSq);
+    if(dropSq && dropSq !== dragCandidate.sq){
+      if(isOpponentTurn()){
+        setPremove(dragCandidate.sq, dropSq);
+      } else if(legal.includes(dropSq)){
+        doMove(dragCandidate.sq, dropSq);
+      } else {
+        applySquareClasses();
+      }
     } else {
       applySquareClasses();
     }
@@ -1034,7 +1085,10 @@ function doRemoteMove(from, to, promo){
   snd(mv.flags && (mv.flags.includes('c') || mv.flags.includes('e')) ? 'Capture' : 'Move');
   if(chess.in_check()) sndCheck();
   updateStatus(); updateMoves();
-  if(chess.game_over()){ snd('GenericNotify'); setTimeout(showOver, 500); }
+  startClockIfNeeded();
+  if(chess.game_over()){ snd('GenericNotify'); setTimeout(showOver, 500); return; }
+
+  triggerPremoveIfReady();
 }
 
 function sqFromXY(x,y){
@@ -1081,21 +1135,54 @@ async function engineGo(){
   startClockIfNeeded();
   if(chess.game_over()){snd('GenericNotify');setTimeout(showOver,500);return}
 
-  if(pmFrom){
-    const pf=pmFrom,pt=pmTo; clearPremove();
-    setTimeout(()=>{
-      if(chess.turn()===playerColor&&!chess.game_over()) doMove(pf,pt);
-    },80);
-  }
+  triggerPremoveIfReady();
 }
 
-// ── Premove ───────────────────────────────────────────────────────────────────
-function setPremove(from,to){
-  clearPremove(); pmFrom=from; pmTo=to;
+// ── Premove (Drag & Drop or Click-to-Move) ────────────────────────────────────
+function setPremove(from, to){
+  if(from === to) return;
+  pmFrom = from;
+  pmTo = to;
+  clearSel();
   applySquareClasses();
-  setBadge('premove set','wait');
+  setBadge('premove: ' + from + '→' + to, 'wait');
 }
-function clearPremove(){pmFrom=null;pmTo=null;applySquareClasses()}
+
+function clearPremove(){
+  pmFrom = null;
+  pmTo = null;
+  applySquareClasses();
+  updateStatus();
+}
+
+function triggerPremoveIfReady(){
+  if(!pmFrom || !pmTo) return;
+  const pf = pmFrom;
+  const pt = pmTo;
+  clearPremove();
+
+  setTimeout(() => {
+    if(chess.turn() === playerColor && !chess.game_over()){
+      const p = chess.get(pf);
+      if(p && p.color === playerColor){
+        let promo = 'q';
+        if(p.type === 'p'){
+          const r = pt[1];
+          const isPromoRow = (p.color === 'w' && r === '8') || (p.color === 'b' && r === '1');
+          if(isPromoRow) promo = 'q';
+        }
+        const legalMoves = chess.moves({ square: pf, verbose: true });
+        const match = legalMoves.find(m => m.to === pt);
+        if(match){
+          doMove(pf, pt, promo);
+        } else {
+          setBadge('premove cancelled', 'wait');
+          setTimeout(() => updateStatus(), 1200);
+        }
+      }
+    }
+  }, 40);
+}
 
 // ── Right-click Arrows & Highlights (Exact Chess.com Behavior) ────────────────
 document.addEventListener('contextmenu', e => {
