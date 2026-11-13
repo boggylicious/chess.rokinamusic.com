@@ -442,6 +442,117 @@ let viewOnlyMode = false;            // true when browsing history
 let analysisMode = false;            // true in Mod Calcul (free play for both sides)
 let focusMode = localStorage.getItem('bl_focus') === '1';
 
+// ── Time Control & Chess Clocks ──────────────────────────────────────────────
+let selectedTC = localStorage.getItem('bl_tc') || 'none'; // 'none', '300', '600', '900', '604800'
+let whiteTime = 0, blackTime = 0;
+let clockTimer = null;
+
+function formatClock(sec){
+  if(sec <= 0) return '00:00';
+  if(sec >= 86400){
+    const d = Math.floor(sec / 86400);
+    const h = Math.floor((sec % 86400) / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    return `${d}d ${h}h ${m}m`;
+  }
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+}
+
+function updateClockDisplays(){
+  if(selectedTC === 'none') return;
+  const isWhiteBottom = (playerColor === 'w');
+  const topSec = isWhiteBottom ? blackTime : whiteTime;
+  const botSec = isWhiteBottom ? whiteTime : blackTime;
+
+  const topEl = G('top-clock');
+  const botEl = G('bot-clock');
+  if(!topEl || !botEl) return;
+
+  topEl.textContent = formatClock(topSec);
+  botEl.textContent = formatClock(botSec);
+
+  const lowThreshold = (selectedTC === '604800') ? 86400 : 30;
+  topEl.classList.toggle('low', topSec <= lowThreshold && topSec > 0);
+  botEl.classList.toggle('low', botSec <= lowThreshold && botSec > 0);
+}
+
+function startClockIfNeeded(){
+  if(selectedTC === 'none' || chess.game_over()) return;
+  if(!clockTimer){
+    clockTimer = setInterval(tickClock, 1000);
+  }
+}
+
+function stopClock(){
+  if(clockTimer){
+    clearInterval(clockTimer);
+    clockTimer = null;
+  }
+}
+
+function tickClock(){
+  if(chess.game_over()){ stopClock(); return; }
+  if(analysisMode) return;
+
+  if(chess.turn() === 'w'){
+    whiteTime--;
+    if(whiteTime <= 0){
+      whiteTime = 0;
+      handleTimeout('w');
+    }
+  } else {
+    blackTime--;
+    if(blackTime <= 0){
+      blackTime = 0;
+      handleTimeout('b');
+    }
+  }
+  updateClockDisplays();
+}
+
+function handleTimeout(loserColor){
+  stopClock();
+  snd('GenericNotify');
+  setBadge('time out!','chk');
+
+  let title = 'Time Out!';
+  let msg = '';
+  let icon = '⏱';
+
+  if(gameMode === 'bot'){
+    if(loserColor === playerColor){
+      icon = '😿';
+      title = 'Time Out!';
+      msg = 'You ran out of time. BLUERICA wins. 😼';
+    } else {
+      icon = '🏆';
+      title = 'You win!';
+      msg = 'BLUERICA ran out of time! 😺';
+    }
+  } else if(gameMode === 'p2p'){
+    if(loserColor === playerColor){
+      icon = '😿';
+      title = 'Time Out!';
+      msg = 'You ran out of time.';
+      if(p2pConn && p2pConn.open){
+        p2pConn.send({ type: 'timeout', loser: playerColor });
+      }
+    } else {
+      icon = '🏆';
+      title = 'You win!';
+      msg = 'Your friend ran out of time!';
+    }
+  }
+
+  G('mg').textContent = icon;
+  G('mt').textContent = title;
+  G('mm').textContent = msg;
+  G('mnew').textContent = gameMode === 'p2p' ? 'Request Rematch' : 'Play Again';
+  G('ov').classList.add('show');
+}
+
 // Drag & drop state
 let dragCandidate = null;
 let isDragging = false;
