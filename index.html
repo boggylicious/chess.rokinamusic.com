@@ -35,14 +35,26 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
 
 /* 3-Column Symmetrical Layout */
 main{display:flex;justify-content:center;align-items:flex-start;gap:22px;padding:20px 24px;max-width:1340px;margin:0 auto;width:100%}
-.side-col{width:260px;display:flex;flex-direction:column;gap:12px;flex-shrink:0}
+.side-col{display:flex;flex-direction:column;gap:12px;flex-shrink:0}
+.side-col.left-col{width:260px}
+.side-col.right-col{width:300px}
 .board-col{display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0;position:relative}
 
 /* Board */
-.pbar{display:flex;align-items:center;justify-content:space-between;width:100%;font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:500;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;gap:8px;padding:3px 4px}
+.pbar{display:flex;align-items:center;justify-content:space-between;width:100%;font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:500;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;gap:8px;padding:4px 6px}
+.pbar-user{display:flex;align-items:center;gap:8px}
 .pbar.active{color:var(--text)}
 .tdot{width:8px;height:8px;border-radius:50%;background:var(--green);display:none;flex-shrink:0}
 .pbar.active .tdot{display:block}
+
+/* Digital Chess Clocks */
+.clock{display:none;font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:700;padding:3px 10px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);letter-spacing:.04em;transition:all .2s;min-width:68px;text-align:center}
+.pbar.active .clock{background:#262420;border-color:var(--accent);color:#fff;box-shadow:0 0 10px rgba(200,164,90,0.22)}
+.clock.low{border-color:var(--red)!important;color:var(--red)!important;background:rgba(201,95,95,0.18)!important;animation:lowPulse 1s infinite alternate}
+@keyframes lowPulse{0%{box-shadow:0 0 4px rgba(201,95,95,0.2)}100%{box-shadow:0 0 14px rgba(201,95,95,0.6)}}
+
+/* Time Control Grid */
+.tc-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 
 #bwrap{position:relative;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:4px;overflow:hidden;box-shadow:0 14px 36px rgba(0,0,0,0.5)}
 #bwrap canvas.arrows{position:absolute;top:0;left:0;pointer-events:none;z-index:20}
@@ -188,36 +200,8 @@ body.focus-mode .board-actions{max-width:640px}
 </header>
 <main id="main-container">
 
-  <!-- LEFT COLUMN: Bluerica Cat & Settings -->
+  <!-- LEFT COLUMN: Settings & Game Options -->
   <aside class="side-col left-col" id="col-left">
-    <!-- Bluerica Cat Profile Card -->
-    <div class="panel cat-card">
-      <img src="cat.jpg" alt="Bluerica">
-      <div class="cat-info">
-        <div class="cat-name">BLUERICA</div>
-        <div class="eng-row"><div class="edot" id="edot"></div><span id="elabel">Loading…</span></div>
-      </div>
-    </div>
-
-    <!-- Piece Style Selector -->
-    <div class="panel">
-      <div class="ph">Piece Style</div>
-      <div class="pb"><div class="crow">
-        <button class="cb on" id="t-classic">♟ Classic</button>
-        <button class="cb"    id="t-cburnett">♚ Modern</button>
-      </div></div>
-    </div>
-
-    <!-- Board Color Theme (Wood / Dark / Green) -->
-    <div class="panel">
-      <div class="ph">Board Theme</div>
-      <div class="pb"><div class="crow">
-        <button class="cb on" id="btheme-wood">🪵 Wood</button>
-        <button class="cb"    id="btheme-dark">🌑 Dark</button>
-        <button class="cb"    id="btheme-green">🌿 Green</button>
-      </div></div>
-    </div>
-
     <!-- Game Mode (Bot vs Friend) -->
     <div class="panel">
       <div class="ph">Game Mode</div>
@@ -240,6 +224,20 @@ body.focus-mode .board-actions{max-width:640px}
       </div></div>
     </div>
 
+    <!-- Time Control Selector -->
+    <div class="panel" id="panel-time">
+      <div class="ph">Time Control</div>
+      <div class="pb">
+        <div class="tc-grid">
+          <button class="cb on" data-tc="none">∞ None</button>
+          <button class="cb"    data-tc="300">⚡ 5 min</button>
+          <button class="cb"    data-tc="600">⏱ 10 min</button>
+          <button class="cb"    data-tc="900">⌛ 15 min</button>
+          <button class="cb"    data-tc="604800" style="grid-column: span 2">📅 7 days</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Play as White / Black -->
     <div class="panel" id="panel-playas">
       <div class="ph">Play As</div>
@@ -248,16 +246,41 @@ body.focus-mode .board-actions{max-width:640px}
         <button class="cb bc"    id="bb">⬛ Black</button>
       </div></div>
     </div>
+
+    <!-- Piece Style Selector -->
+    <div class="panel">
+      <div class="ph">Piece Style</div>
+      <div class="pb"><div class="crow">
+        <button class="cb on" id="t-classic">♟ Classic</button>
+        <button class="cb"    id="t-cburnett">♚ Modern</button>
+      </div></div>
+    </div>
+
+    <!-- Board Color Theme (Wood / Dark / Green) -->
+    <div class="panel">
+      <div class="ph">Board Theme</div>
+      <div class="pb"><div class="crow">
+        <button class="cb on" id="btheme-wood">🪵 Wood</button>
+        <button class="cb"    id="btheme-dark">🌑 Dark</button>
+        <button class="cb"    id="btheme-green">🌿 Green</button>
+      </div></div>
+    </div>
   </aside>
 
   <!-- CENTER COLUMN: Grand Chessboard & Primary Controls -->
   <section class="board-col" id="col-board">
-    <div class="pbar" id="top-bar"><span class="tdot"></span><span id="top-name">BLUERICA</span></div>
+    <div class="pbar" id="top-bar">
+      <div class="pbar-user"><span class="tdot"></span><span id="top-name">BLUERICA</span></div>
+      <div class="clock" id="top-clock">10:00</div>
+    </div>
     <div id="bwrap">
       <div class="board" id="board"></div>
       <canvas class="arrows" id="acanvas"></canvas>
     </div>
-    <div class="pbar active" id="bot-bar"><span class="tdot"></span><span id="bot-name">You</span></div>
+    <div class="pbar active" id="bot-bar">
+      <div class="pbar-user"><span class="tdot"></span><span id="bot-name">You</span></div>
+      <div class="clock" id="bot-clock">10:00</div>
+    </div>
 
     <!-- Action buttons directly below the board -->
     <div class="board-actions">
@@ -270,8 +293,17 @@ body.focus-mode .board-actions{max-width:640px}
     </div>
   </section>
 
-  <!-- RIGHT COLUMN: Evaluation, P2P Room & Move History -->
+  <!-- RIGHT COLUMN: Bluerica Cat Banner, Evaluation, P2P Room & Move History -->
   <aside class="side-col right-col" id="col-right">
+    <!-- Bluerica Cat Profile Card (Soul of the App on the RIGHT!) -->
+    <div class="panel cat-card">
+      <img src="cat.jpg" alt="Bluerica">
+      <div class="cat-info">
+        <div class="cat-name">BLUERICA</div>
+        <div class="eng-row"><div class="edot" id="edot"></div><span id="elabel">Loading…</span></div>
+      </div>
+    </div>
+
     <!-- Live Eval Bar -->
     <div class="panel">
       <div class="ph">Position Eval</div>
@@ -755,6 +787,7 @@ function doMove(from,to,promo){
   snd(mv.flags&&(mv.flags.includes('c')||mv.flags.includes('e'))?'Capture':'Move');
   if(chess.in_check())sndCheck();
   updateStatus();updateMoves();
+  startClockIfNeeded();
 
   if(gameMode === 'p2p' && p2pConn && p2pConn.open){
     p2pConn.send({ type: 'move', from, to, promo: promo || 'q' });
@@ -824,6 +857,7 @@ async function engineGo(){
   snd(mv&&mv.flags&&(mv.flags.includes('c')||mv.flags.includes('e'))?'Capture':'Move');
   if(chess.in_check())sndCheck();
   updateStatus();updateMoves();
+  startClockIfNeeded();
   if(chess.game_over()){snd('GenericNotify');setTimeout(showOver,500);return}
 
   if(pmFrom){
@@ -1112,6 +1146,7 @@ function updateMoves(){
 
 // ── Game Over & Promotion ─────────────────────────────────────────────────────
 function showOver(){
+  stopClock();
   const won=chess.in_checkmate()&&chess.turn()!==playerColor;
   let icon,title,msg;
   if(chess.in_checkmate()){
@@ -1146,6 +1181,7 @@ function showPromo(){
           renderBoard();
           snd('Move');
           updateStatus();updateMoves();
+          startClockIfNeeded();
 
           if(gameMode === 'p2p' && p2pConn && p2pConn.open){
             p2pConn.send({ type: 'move', from: fromSq, to: toSq, promo: t });
@@ -1187,6 +1223,7 @@ function spawnReaction(emoji){
 
 // ── New Game ──────────────────────────────────────────────────────────────────
 function newGame(){
+  stopClock();
   chess=new Chess(); snap=[]; vi=-1; viewOnlyMode=false;
   selSq=null; legal=[]; lastFrom=null; lastTo=null;
   pmFrom=null; pmTo=null; rcHL={}; arrows=[];
@@ -1194,6 +1231,18 @@ function newGame(){
   if(analysisMode) toggleAnalysisMode();
   G('ov').classList.remove('show');
   setEval(0); updateMoves();
+
+  if(selectedTC === 'none'){
+    G('top-clock').style.display = 'none';
+    G('bot-clock').style.display = 'none';
+  } else {
+    const sec = parseInt(selectedTC, 10);
+    whiteTime = sec;
+    blackTime = sec;
+    G('top-clock').style.display = 'block';
+    G('bot-clock').style.display = 'block';
+    updateClockDisplays();
+  }
 
   if(gameMode === 'p2p'){
     G('top-name').textContent = isHost ? 'Friend (Black)' : 'Friend (White)';
@@ -1205,7 +1254,7 @@ function newGame(){
 
   renderBoard();
   updateStatus();
-  if(gameMode === 'bot' && playerColor==='b') engineGo();
+  if(gameMode === 'bot' && playerColor==='b'){ startClockIfNeeded(); engineGo(); }
 }
 
 // ── P2P Multiplayer (WebRTC / PeerJS) ─────────────────────────────────────────
@@ -1262,7 +1311,7 @@ function initP2PHost(){
     p2pConn = conn;
     setupConnectionHandlers();
     conn.on('open', () => {
-      conn.send({ type: 'init', fen: chess.fen(), hostColor: 'w' });
+      conn.send({ type: 'init', fen: chess.fen(), hostColor: 'w', tc: selectedTC });
       onPeerConnected();
     });
   });
@@ -1314,6 +1363,10 @@ function setupConnectionHandlers(){
   p2pConn.on('data', data => {
     if(!data) return;
     if(data.type === 'init'){
+      if(data.tc !== undefined){
+        selectedTC = data.tc;
+        updateTCUI();
+      }
       playerColor = data.hostColor === 'w' ? 'b' : 'w';
       newGame();
       onPeerConnected();
@@ -1321,6 +1374,8 @@ function setupConnectionHandlers(){
       doRemoteMove(data.from, data.to, data.promo);
     } else if(data.type === 'reaction'){
       spawnReaction(data.emoji);
+    } else if(data.type === 'timeout'){
+      handleTimeout(data.loser);
     } else if(data.type === 'resign'){
       snd('GenericNotify');
       G('mg').textContent = '🏆';
@@ -1378,6 +1433,23 @@ G('t-cburnett').addEventListener('click', () => {
   renderBoard();
 });
 
+
+// Time Control Selection
+function updateTCUI(){
+  document.querySelectorAll('[data-tc]').forEach(btn => {
+    btn.classList.toggle('on', btn.dataset.tc === selectedTC);
+  });
+}
+
+document.querySelectorAll('[data-tc]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    selectedTC = btn.dataset.tc;
+    localStorage.setItem('bl_tc', selectedTC);
+    updateTCUI();
+    newGame();
+  });
+});
+
 // Board Color Themes
 G('btheme-wood').addEventListener('click', () => applyBoardTheme('wood'));
 G('btheme-dark').addEventListener('click', () => applyBoardTheme('dark'));
@@ -1425,6 +1497,9 @@ document.querySelectorAll('.p2p-reac').forEach(btn => {
       currentLevel = parseInt(s);
     }
   }
+  const tc = localStorage.getItem('bl_tc');
+  if(tc) selectedTC = tc;
+  updateTCUI();
   updateThemeUI();
   applyBoardTheme(currentBoardTheme);
   if(focusMode) applyFocusMode(true);
@@ -1469,6 +1544,7 @@ G('bcalc').addEventListener('click',toggleAnalysisMode);
 G('bhint').addEventListener('click',doHint);
 G('bres').addEventListener('click',()=>{
   if(chess.game_over()||!confirm('Resign?')) return;
+  stopClock();
   if(gameMode === 'p2p' && p2pConn && p2pConn.open){
     p2pConn.send({ type: 'resign' });
   }
