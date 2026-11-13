@@ -36,9 +36,9 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
 /* 3-Column Symmetrical Layout */
 main{display:flex;flex-wrap:nowrap;justify-content:center;align-items:flex-start;gap:18px;padding:16px 20px;max-width:1300px;margin:0 auto;width:100%}
 .side-col{display:flex;flex-direction:column;gap:10px;flex-shrink:0}
-.side-col.left-col{width:230px}
-.side-col.right-col{width:275px}
-.board-col{display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0;position:relative}
+.side-col.left-col{width:220px;order:1}
+.board-col{display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0;position:relative;order:2}
+.side-col.right-col{width:270px;order:3}
 
 /* Board */
 .pbar{display:flex;align-items:center;justify-content:space-between;width:100%;font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:500;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;gap:8px;padding:4px 6px}
@@ -178,11 +178,13 @@ body.focus-mode main{padding:8px;justify-content:center;align-items:center;min-h
 body.focus-mode .board-col{max-width:100%}
 body.focus-mode .board-actions{max-width:640px}
 
-/* Responsive */
-@media(max-width:768px){
-  main{flex-direction:column;align-items:center;padding:10px 8px;gap:14px}
-  .side-col{width:100%!important;max-width:480px}
-  .board-actions .abtn{font-size:.62rem;padding:8px 3px}
+/* Responsive (Mobile, Tablet, Split-Window: Board is ALWAYS Top / Order 1) */
+@media(max-width:980px){
+  main{flex-direction:column;align-items:center;padding:10px 8px;gap:14px;flex-wrap:wrap}
+  .board-col{order:1!important;width:100%!important;max-width:520px}
+  .side-col.right-col{order:2!important;width:100%!important;max-width:520px}
+  .side-col.left-col{order:3!important;width:100%!important;max-width:520px}
+  .board-actions .abtn{font-size:.64rem;padding:8px 3px}
 }
 </style>
 </head>
@@ -641,61 +643,72 @@ function boardPx(){
     const max = Math.min(window.innerWidth - 32, window.innerHeight - 150, 720);
     return Math.max(Math.floor(max / 8) * 8, 280);
   }
-  if(window.innerWidth <= 768){
-    const max = Math.min(window.innerWidth - 20, window.innerHeight - 250, 480);
+  if(window.innerWidth <= 980){
+    const max = Math.min(window.innerWidth - 20, window.innerHeight - 200, 520);
     return Math.max(Math.floor(max / 8) * 8, 280);
   }
-  // Available width between the two sidebars (230px left + 275px right + 36px gaps + 40px padding = 581px)
-  const availW = window.innerWidth - 581;
-  const max = Math.min(availW, window.innerHeight - 170, 620);
-  return Math.max(Math.floor(max / 8) * 8, 360);
+  // Available width between the two sidebars (220px left + 270px right + 36px gaps + 40px padding = 566px)
+  const availW = window.innerWidth - 566;
+  const availH = window.innerHeight - 170;
+  const max = Math.min(availW, availH, 620);
+  return Math.max(Math.floor(max / 8) * 8, 320);
 }
 
 function renderBoard(pos){
-  const brd=G('board');
-  const flip=playerColor==='b';
-  const sz=boardPx(); sqSize=sz/8;
-  brd.style.width=sz+'px'; brd.style.height=sz+'px';
-  brd.innerHTML='';
+  const brd = G('board');
+  if(!brd) return;
+  try {
+    const flip = playerColor === 'b';
+    const sz = boardPx();
+    sqSize = sz / 8;
+    brd.style.width = sz + 'px';
+    brd.style.height = sz + 'px';
+    brd.innerHTML = '';
 
-  const fenObj = pos ? new Chess(typeof pos==='string'?pos:pos.fen()) : chess;
+    const fenObj = pos ? new Chess(typeof pos === 'string' ? pos : pos.fen()) : chess;
 
-  for(let ri=0;ri<8;ri++){
-    for(let ci=0;ci<8;ci++){
-      const row=flip?ri:7-ri, col=flip?7-ci:ci;
-      const sq='abcdefgh'[col]+(row+1);
-      const light=(row+col)%2===1;
-      const div=document.createElement('div');
-      div.className='sq '+(light?'ls':'ds');
-      div.dataset.sq=sq;
-      div.style.width=sqSize+'px'; div.style.height=sqSize+'px';
+    for(let ri = 0; ri < 8; ri++){
+      for(let ci = 0; ci < 8; ci++){
+        const row = flip ? ri : 7 - ri, col = flip ? 7 - ci : ci;
+        const sq = 'abcdefgh'[col] + (row + 1);
+        const light = (row + col) % 2 === 1;
+        const div = document.createElement('div');
+        div.className = 'sq ' + (light ? 'ls' : 'ds');
+        div.dataset.sq = sq;
+        div.style.width = sqSize + 'px';
+        div.style.height = sqSize + 'px';
 
-      // coords
-      if(ci===0){const r=document.createElement('span');r.className='coord-r';r.textContent=row+1;div.appendChild(r)}
-      if(ri===7){const f=document.createElement('span');f.className='coord-f';f.textContent='abcdefgh'[col];div.appendChild(f)}
+        // coords
+        if(ci === 0){ const r = document.createElement('span'); r.className = 'coord-r'; r.textContent = row + 1; div.appendChild(r); }
+        if(ri === 7){ const f = document.createElement('span'); f.className = 'coord-f'; f.textContent = 'abcdefgh'[col]; div.appendChild(f); }
 
-      // piece
-      const p=fenObj.get(sq);
-      if(p){
-        const img=document.createElement('img');
-        img.src=getPieceUrl(p.color, p.type);
-        img.draggable=false;
-        div.appendChild(img);
+        // piece
+        const p = fenObj ? fenObj.get(sq) : null;
+        if(p){
+          const img = document.createElement('img');
+          img.src = getPieceUrl(p.color, p.type);
+          img.draggable = false;
+          div.appendChild(img);
+        }
+
+        div.addEventListener('mousedown', e => onPointerDown(e, sq, false));
+        div.addEventListener('touchstart', e => onPointerDown(e, sq, true), { passive: false });
+        brd.appendChild(div);
       }
-
-      div.addEventListener('mousedown',e=>onPointerDown(e,sq,false));
-      div.addEventListener('touchstart',e=>onPointerDown(e,sq,true),{passive:false});
-      brd.appendChild(div);
     }
+
+    // sync canvas
+    const cv = G('acanvas');
+    if(cv){
+      cv.width = sz; cv.height = sz;
+      cv.style.width = sz + 'px'; cv.style.height = sz + 'px';
+    }
+
+    applySquareClasses();
+    drawArrows();
+  } catch(err) {
+    console.error('renderBoard error:', err);
   }
-
-  // sync canvas
-  const cv=G('acanvas');
-  cv.width=sz; cv.height=sz;
-  cv.style.width=sz+'px'; cv.style.height=sz+'px';
-
-  applySquareClasses();
-  drawArrows();
 }
 
 function getSqEl(sq){return G('board').querySelector('[data-sq="'+sq+'"]')}
@@ -1328,33 +1341,38 @@ function spawnReaction(emoji){
 
 // ── New Game ──────────────────────────────────────────────────────────────────
 function newGame(){
-  stopClock();
-  chess=new Chess(); snap=[]; vi=-1; viewOnlyMode=false;
-  selSq=null; legal=[]; lastFrom=null; lastTo=null;
-  pmFrom=null; pmTo=null; rcHL={}; arrows=[];
-  engineBusy=false;
-  if(analysisMode) toggleAnalysisMode();
-  G('ov').classList.remove('show');
-  setEval(0); updateMoves();
+  try {
+    stopClock();
+    chess=new Chess(); snap=[]; vi=-1; viewOnlyMode=false;
+    selSq=null; legal=[]; lastFrom=null; lastTo=null;
+    pmFrom=null; pmTo=null; rcHL={}; arrows=[];
+    engineBusy=false;
+    if(analysisMode) toggleAnalysisMode();
+    if(G('ov')) G('ov').classList.remove('show');
+    setEval(0); updateMoves();
 
-  if(selectedTC === 'none'){
-    G('top-clock').style.display = 'none';
-    G('bot-clock').style.display = 'none';
-  } else {
-    const sec = parseInt(selectedTC, 10);
-    whiteTime = sec;
-    blackTime = sec;
-    G('top-clock').style.display = 'block';
-    G('bot-clock').style.display = 'block';
-    updateClockDisplays();
-  }
+    const currentTC = (typeof selectedTC !== 'undefined') ? selectedTC : (localStorage.getItem('bl_tc') || 'none');
+    if(currentTC === 'none'){
+      if(G('top-clock')) G('top-clock').style.display = 'none';
+      if(G('bot-clock')) G('bot-clock').style.display = 'none';
+    } else {
+      const sec = parseInt(currentTC, 10) || 600;
+      whiteTime = sec;
+      blackTime = sec;
+      if(G('top-clock')) G('top-clock').style.display = 'block';
+      if(G('bot-clock')) G('bot-clock').style.display = 'block';
+      updateClockDisplays();
+    }
 
-  if(gameMode === 'p2p'){
-    G('top-name').textContent = isHost ? 'Friend (Black)' : 'Friend (White)';
-    G('bot-name').textContent = isHost ? 'You (White)' : 'You (Black)';
-  } else {
-    G('top-name').textContent=playerColor==='w'?'BLUERICA':'You';
-    G('bot-name').textContent=playerColor==='w'?'You':'BLUERICA';
+    if(gameMode === 'p2p'){
+      if(G('top-name')) G('top-name').textContent = isHost ? 'Friend (Black)' : 'Friend (White)';
+      if(G('bot-name')) G('bot-name').textContent = isHost ? 'You (White)' : 'You (Black)';
+    } else {
+      if(G('top-name')) G('top-name').textContent=playerColor==='w'?'BLUERICA':'You';
+      if(G('bot-name')) G('bot-name').textContent=playerColor==='w'?'You':'BLUERICA';
+    }
+  } catch(e) {
+    console.error('newGame initialization error:', e);
   }
 
   renderBoard();
