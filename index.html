@@ -55,7 +55,7 @@ main{display:flex;justify-content:center;align-items:flex-start;gap:20px;padding
 .sq.sel{background:rgba(255,255,255,0.22)!important;box-shadow:inset 0 0 0 3px rgba(255,255,255,0.6)!important}
 .sq.lmf{background:rgba(200,164,90,0.28)!important}
 .sq.lmt{background:rgba(200,164,90,0.5)!important}
-.sq.rch{background:rgba(230,160,40,0.35)!important;box-shadow:inset 0 0 0 3px rgba(230,160,40,0.75)!important}
+.sq.rch{background:rgba(255,170,0,0.42)!important}
 .sq.pre{background:rgba(100,180,255,0.38)!important}
 .sq.ehi{box-shadow:inset 0 0 0 4px rgba(100,200,100,0.9)!important}
 .sq.drag-over{box-shadow:inset 0 0 0 4px rgba(255,255,255,0.75)!important}
@@ -556,8 +556,22 @@ function isAllowedToMove(piece){
 }
 
 function onPointerDown(e, sq, isTouch){
-  if(!isTouch && e.button === 2) return;
+  // Right-click handling directly with clicked square (Chess.com behavior)
+  if(!isTouch && e.button === 2){
+    e.preventDefault();
+    isRightClicking = true;
+    rcFrom = sq;
+    rcCurrent = sq;
+    return;
+  }
   if(isTouch) e.preventDefault();
+
+  // Chess.com behavior: ANY left-click anywhere on the board clears all arrows and highlights!
+  if(!isTouch && e.button === 0){
+    if(arrows.length > 0 || Object.keys(rcHL).length > 0){
+      clearArrowsHL();
+    }
+  }
 
   const clientX = isTouch ? e.touches[0].clientX : e.clientX;
   const clientY = isTouch ? e.touches[0].clientY : e.clientY;
@@ -738,6 +752,11 @@ function doRemoteMove(from, to, promo){
 }
 
 function sqFromXY(x,y){
+  const el = document.elementFromPoint(x, y);
+  if(el){
+    const sqEl = el.closest('.sq');
+    if(sqEl && sqEl.dataset.sq) return sqEl.dataset.sq;
+  }
   const brd=G('board').getBoundingClientRect();
   const px=x-brd.left, py=y-brd.top;
   const sz=brd.width/8;
@@ -789,82 +808,142 @@ function setPremove(from,to){
 }
 function clearPremove(){pmFrom=null;pmTo=null;applySquareClasses()}
 
-// ── Right-click Arrows ────────────────────────────────────────────────────────
-G('bwrap').addEventListener('contextmenu',e=>e.preventDefault());
-G('bwrap').addEventListener('mousedown',e=>{
-  if(e.button!==2) return;
-  e.preventDefault();
-  rcFrom=sqFromXY(e.clientX,e.clientY);
-  rcDrag=false;
-});
-document.addEventListener('mousemove',e=>{
-  if(!(e.buttons&2)||!rcFrom) return;
-  const sq=sqFromXY(e.clientX,e.clientY);
-  if(sq&&sq!==rcFrom){
-    rcDrag=true;
-    drawArrows(sq);
+// ── Right-click Arrows & Highlights (Exact Chess.com Behavior) ────────────────
+let isRightClicking = false;
+let rcCurrent = null;
+
+// Suppress native browser context menu anywhere on the board
+document.addEventListener('contextmenu', e => {
+  if (e.target.closest('#bwrap') || e.target.closest('#board')) {
+    e.preventDefault();
+  }
+}, { capture: true });
+
+document.addEventListener('mousemove', e => {
+  if (!isRightClicking || !rcFrom) return;
+  if (!(e.buttons & 2)) {
+    isRightClicking = false;
+    rcFrom = null;
+    rcCurrent = null;
+    drawArrows();
+    return;
+  }
+  const sq = sqFromXY(e.clientX, e.clientY);
+  if (sq && sq !== rcCurrent) {
+    rcCurrent = sq;
+    drawArrows(rcCurrent);
   }
 });
-document.addEventListener('mouseup',e=>{
-  if(e.button!==2||!rcFrom) return;
+
+document.addEventListener('mouseup', e => {
+  if (e.button !== 2 || !isRightClicking || !rcFrom) return;
   e.preventDefault();
-  const sq=sqFromXY(e.clientX,e.clientY);
-  if(rcDrag&&sq&&sq!==rcFrom){
-    const idx=arrows.findIndex(a=>a.f===rcFrom&&a.t===sq);
-    if(idx!==-1) arrows.splice(idx,1); else arrows.push({f:rcFrom,t:sq});
-    drawArrows();
-  } else if(!rcDrag && rcFrom){
-    if(rcHL[rcFrom]){
+  const sq = sqFromXY(e.clientX, e.clientY);
+  if (sq && sq !== rcFrom) {
+    // Arrow from rcFrom to sq: toggle if already exists
+    const idx = arrows.findIndex(a => a.f === rcFrom && a.t === sq);
+    if (idx !== -1) arrows.splice(idx, 1);
+    else arrows.push({ f: rcFrom, t: sq });
+  } else if (rcFrom) {
+    // Single square click: toggle orange square highlight
+    if (rcHL[rcFrom]) {
       delete rcHL[rcFrom];
       getSqEl(rcFrom)?.classList.remove('rch');
     } else {
-      rcHL[rcFrom]=true;
+      rcHL[rcFrom] = true;
       getSqEl(rcFrom)?.classList.add('rch');
     }
   }
-  rcFrom=null; rcDrag=false;
+  isRightClicking = false;
+  rcFrom = null;
+  rcCurrent = null;
+  drawArrows();
 });
 
 function clearArrowsHL(){
-  Object.keys(rcHL).forEach(sq=>getSqEl(sq)?.classList.remove('rch'));
-  rcHL={}; arrows=[]; drawArrows();
+  Object.keys(rcHL).forEach(sq => getSqEl(sq)?.classList.remove('rch'));
+  rcHL = {};
+  arrows = [];
+  drawArrows();
+}
+
+function getSqCenter(sq){
+  const el = getSqEl(sq);
+  if (!el) return null;
+  const bRect = G('board').getBoundingClientRect();
+  const sRect = el.getBoundingClientRect();
+  return {
+    x: sRect.left - bRect.left + sRect.width / 2,
+    y: sRect.top - bRect.top + sRect.height / 2
+  };
 }
 
 function drawArrows(previewTo = null){
-  const cv=G('acanvas'),ctx=cv.getContext('2d');
-  ctx.clearRect(0,0,cv.width,cv.height);
-  const sz=sqSize;
+  const cv = G('acanvas');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  const sz = sqSize;
+  if (!sz) return;
 
   const renderArrow = (f, t, isPreview = false) => {
-    const fc=center(f),tc=center(t);
-    const dx=tc.x-fc.x,dy=tc.y-fc.y,len=Math.sqrt(dx*dx+dy*dy);
-    if(len < 2) return;
-    const ux=dx/len,uy=dy/len,hl=sz*.40,lw=sz*.12;
+    const fc = getSqCenter(f);
+    const tc = getSqCenter(t);
+    if (!fc || !tc) return;
+
+    const dx = tc.x - fc.x;
+    const dy = tc.y - fc.y;
+    const len = Math.hypot(dx, dy);
+    if (len < 5) return;
+
+    const angle = Math.atan2(dy, dx);
+    const color = isPreview ? 'rgba(255, 170, 0, 0.65)' : 'rgba(255, 165, 0, 0.88)';
+    const shaftWidth = sz * 0.17;
+    const headLength = sz * 0.38;
+
+    const tipOffset = sz * 0.16;
+    const tipX = tc.x - Math.cos(angle) * tipOffset;
+    const tipY = tc.y - Math.sin(angle) * tipOffset;
+
+    const startX = fc.x + Math.cos(angle) * (sz * 0.14);
+    const startY = fc.y + Math.sin(angle) * (sz * 0.14);
+
     ctx.save();
-    const color = isPreview ? 'rgba(235, 170, 50, 0.65)' : 'rgba(230, 160, 40, 0.9)';
-    ctx.strokeStyle=color; ctx.fillStyle=color;
-    ctx.lineWidth=lw; ctx.lineCap='round';
-    ctx.beginPath(); ctx.moveTo(fc.x,fc.y);
-    ctx.lineTo(tc.x-ux*hl*.7,tc.y-uy*hl*.7); ctx.stroke();
-    const a=Math.atan2(dy,dx),sp=.42;
+    ctx.fillStyle = color;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = shaftWidth;
+    ctx.lineCap = 'round';
+
+    // Shaft
     ctx.beginPath();
-    ctx.moveTo(tc.x,tc.y);
-    ctx.lineTo(tc.x-hl*Math.cos(a-sp),tc.y-hl*Math.sin(a-sp));
-    ctx.lineTo(tc.x-hl*Math.cos(a+sp),tc.y-hl*Math.sin(a+sp));
-    ctx.closePath(); ctx.fill(); ctx.restore();
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(tipX - Math.cos(angle) * (headLength * 0.65), tipY - Math.sin(angle) * (headLength * 0.65));
+    ctx.stroke();
+
+    // Triangle Head (with Chess.com indented back)
+    ctx.beginPath();
+    ctx.moveTo(tipX, tipY);
+    ctx.lineTo(
+      tipX - headLength * Math.cos(angle - 0.52),
+      tipY - headLength * Math.sin(angle - 0.52)
+    );
+    ctx.lineTo(
+      tipX - (headLength * 0.72) * Math.cos(angle),
+      tipY - (headLength * 0.72) * Math.sin(angle)
+    );
+    ctx.lineTo(
+      tipX - headLength * Math.cos(angle + 0.52),
+      tipY - headLength * Math.sin(angle + 0.52)
+    );
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
   };
 
-  arrows.forEach(({f,t})=>renderArrow(f,t,false));
-  if(rcFrom && previewTo && previewTo !== rcFrom){
+  arrows.forEach(({ f, t }) => renderArrow(f, t, false));
+  if (rcFrom && previewTo && previewTo !== rcFrom) {
     renderArrow(rcFrom, previewTo, true);
   }
-}
-
-function center(sq){
-  const flip=playerColor==='b';
-  const col='abcdefgh'.indexOf(sq[0]),row=parseInt(sq[1])-1;
-  const c=flip?7-col:col,r=flip?row:7-row;
-  return{x:c*sqSize+sqSize/2,y:(7-r)*sqSize+sqSize/2};
 }
 
 // ── Mod Calcul Toggle ────────────────────────────────────────────────────────
